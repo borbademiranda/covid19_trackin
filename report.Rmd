@@ -1,13 +1,10 @@
 ---
 title: "Covid19 Report"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir= normalizePath('..'))
-knitr::opts_chunk$set(error = FALSE)
 ```
 
 ```{r packages, include=FALSE}
