@@ -1,12 +1,13 @@
----
-name: "covid19"
-output_dir: "docs"
+name: "covid19_dcpUFPE"
 navbar:
   title: "Covid19 Tracking"
   left:
   - text: "Home"
-   href: index.html
+    href: index.html
+  - text: 'Sobre'
+    href: about.html
+  - text: 'Mapas'
+    href: report.html
 output:
   html_document:
- theme: cosmo
- ---
+   theme: cosmo
