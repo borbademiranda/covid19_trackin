@@ -1,0 +1,101 @@
+---
+title: "Covid19 Report"
+author: "Lucas Borba-Miranda"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages, include=FALSE}
+library(tidyverse)
+library(leaflet)
+library(readxl)
+library(RCurl)
+library(stringr)
+library(htmltools)
+library(rgdal)
+
+```
+
+# Covid19 no Brasil
+
+Podemos observar no mapa interativo abaixo o número de infectados por município no Brasil. Podemos ver também o número de mortos, bem como a taxa de infectados e a taxa de mortalidade de um determinado município ao posicionarmos o mouse em cima da cidade desejada.
+
+```{r covidbr, include=FALSE}
+# arquivo temporário para baixar dados
+temp <- tempfile()
+
+# braixando dados
+download.file("https://brasil.io/dataset/covid19/caso?format=csv", temp)
+
+# importando
+brazil <- read.table("https://brasil.io/dataset/covid19/caso?format=csv",
+                   sep = ",", header = T, stringsAsFactors = F, encoding = 'UTF-8')
+names(brazil)
+
+```
+
+
+```{r maps, echo=FALSE, fig.align='center', warning=FALSE}
+# coordenadas dos municípios brasileiros
+mun <- read.csv('./data/mun_coord.csv', encoding = 'UTF-8')
+
+mun$city <- mun$NOME_MUNICIPIO
+
+# transformando os nomes dos municípios para caixa alta
+brazil$city <- toupper(brazil$city)
+
+# mergindo dados
+bd <- merge(mun, brazil, by = 'city')
+
+bd2 <- bd %>%
+  group_by(city) %>%
+  summarize(confirmed_m = sum(confirmed, na.rm = T),
+            deaths_m = sum(deaths, na.rm = T),
+            conf_100k_m = sum(confirmed_per_100k_inhabitants, na.rm = T),
+            death_rate_m = sum(death_rate, na.rm = T))
+
+
+bd2 <- merge(bd2, mun, by = 'city')
+
+# ajustando o conteúdo da variável a ser plotada
+cidade <- paste('Cidade:', bd2$city)
+confirmados <- paste('Casos confirmados:', bd2$confirmed_m)
+mortos <- paste('Mortos:', bd2$deaths_m)
+taxa_100k <- paste('Infectados/100 mil habitantes', bd2$conf_100k_m)
+mortalidade <- paste('Taxa de mortalidade', bd2$death_rate_m)
+
+carai <- paste(cidade, '<br/>',
+                confirmados, '<br/>',
+                mortos, '<br/>',
+                taxa_100k, '<br/>',
+                mortalidade, sep = '') %>%
+  lapply(HTML)
+
+mybins <- c(0, 50, seq(100, 6000, 500))
+
+
+
+palette <- colorNumeric(palette="Reds", domain = NULL, na.color="transparent")
+palette2 <- colorBin(palette="Reds", bd2$confirmed_m, mybins, pretty = F)
+
+
+
+m <- bd2 %>%
+  leaflet() %>% 
+  addTiles() %>%
+  addCircleMarkers(lng = ~LONGITUDE, lat = ~LATITUDE,
+                   radius = ~ sqrt(bd2$confirmed_m), stroke = FALSE, fillOpacity = 0.5,
+                   label = carai, color = ~palette2(bd2$confirmed_m),
+                   labelOptions = labelOptions(style = list("font-weight" = "normal", 
+                                                            padding = "3px 8px"), 
+                                               textsize = "13px", 
+                                               direction = "auto")) %>%
+   addLegend(pal = palette2, values = ~confirmed_m, opacity=0.9, title = "Confirmados", position = "bottomright" )
+
+m
+```
+
