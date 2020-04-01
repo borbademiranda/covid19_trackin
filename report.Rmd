@@ -1,5 +1,10 @@
 ---
 title: "Covid19 Report"
+knit: (function(input_file, encoding) {
+  out_dir <- 'docs';
+  rmarkdown::render(input_file,
+ encoding=encoding,
+ output_file=file.path(dirname(input_file), out_dir, 'index.html'))})
 author: "Lucas Borba-Miranda"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: html_document
@@ -41,7 +46,7 @@ names(brazil)
 
 ```{r maps, echo=FALSE, fig.align='center', warning=FALSE}
 # coordenadas dos municípios brasileiros
-mun <- read.csv('./data/mun_coord.csv', encoding = 'UTF-8')
+mun <- read.csv('C:/Users/borba/OneDrive/Área de Trabalho/2020/covid_tracking/data/mun_coord.csv', encoding = 'UTF-8')
 
 mun$city <- mun$NOME_MUNICIPIO
 
