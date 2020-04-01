@@ -1,0 +1,12 @@
+---
+name: "covid19"
+output_dir: "docs"
+navbar:
+  title: "Covid19 Tracking"
+  left:
+  - text: "Home"
+   href: index.html
+output:
+  html_document:
+ theme: cosmo
+ ---
