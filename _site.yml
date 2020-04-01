@@ -1,4 +1,5 @@
 name: "covid19_dcpUFPE"
+output_dir: 'docs'
 navbar:
   title: "Covid19 Tracking"
   left:
