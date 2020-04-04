@@ -1,14 +1,14 @@
 name: "covid19_dcpUFPE"
 output_dir: 'docs'
 navbar:
-  title: "Covid19 Tracking"
+  title: "Covid 19 no Brasil e no Mundo"
   left:
   - text: "Home"
     href: index.html
+  - text: 'Brasil'
+    href: report.html
   - text: 'Sobre'
     href: about.html
-  - text: 'Mapas'
-    href: report.html
 output:
   html_document:
    theme: cosmo
