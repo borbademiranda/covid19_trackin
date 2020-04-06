@@ -3,12 +3,16 @@ output_dir: 'docs'
 navbar:
   title: "Covid 19 no Brasil e no Mundo"
   left:
-  - text: "Home"
+  - text: "Mundo"
     href: index.html
   - text: 'Brasil'
     href: report.html
+  - text: 'Relatório'
+    href: relatorio.html 
   - text: 'Sobre'
     href: about.html
 output:
   html_document:
    theme: cosmo
+   fig_width: 12
+   fig_height: 8.5

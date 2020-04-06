@@ -35,30 +35,23 @@ update_jhu = function(input_df, tag) {
   input_df
 }
 
-names(jhu_cases)
-
-options(timeout = 4000000) 
-
 # lcarregando dados da johns hopkins sobre últimos casos
-temp = tempfile()
-download.file("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv", temp)
 
-
-jhu_cases <- as.data.frame(data.table::fread("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"))
+jhu_cases <- as.data.frame(data.table::fread("http://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv"))
 jhu_cases[is.na(jhu_cases)]=0
 total_cases <- sum(jhu_cases[,ncol(jhu_cases)])
 jhu_cases = update_jhu(jhu_cases, "cases")
 if (total_cases!=sum(jhu_cases[nrow(jhu_cases),1:(ncol(jhu_cases)-1)])) { stop(paste0("Error: incorrect processing - total counts do not match")) }
 
 # load latest Covid-2019 data: deaths
-jhu_deaths <- as.data.frame(data.table::fread("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"))
+jhu_deaths <- as.data.frame(data.table::fread("http://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv"))
 jhu_deaths[is.na(jhu_deaths)]=0
 total_deaths <- sum(jhu_deaths[,ncol(jhu_deaths)])
 jhu_deaths = update_jhu(jhu_deaths, "deaths")
 if (total_deaths!=sum(jhu_deaths[nrow(jhu_deaths),1:(ncol(jhu_deaths)-1)])) { stop(paste0("Error: incorrect processing - total counts do not match")) }
 
 # load latest Covid-2019 data: recovered
-jhu_rec <- as.data.frame(data.table::fread("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv"))
+jhu_rec <- as.data.frame(data.table::fread("http://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv"))
 jhu_rec[is.na(jhu_rec)]=0
 total_rec <- sum(jhu_rec[,ncol(jhu_rec)])
 jhu_rec = update_jhu(jhu_rec, "recovered")
