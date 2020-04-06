@@ -73,26 +73,29 @@ carai <- paste(cidade, '<br/>',
                 mortalidade, sep = '') %>%
   lapply(HTML)
 
-mybins <- c(0, 50, seq(100, 6000, 500))
+mybins <- c(seq(0, 50, 10), seq(100, 2000, 500))
 
-
-
+# criando paleta de cores
 palette <- colorNumeric(palette="Reds", domain = NULL, na.color="transparent")
-palette2 <- colorBin(palette="Reds", bd2$confirmed_m, mybins, pretty = F)
+
+palette2 <- colorBin(palette="Reds", bd2$conf_100k_m, mybins, pretty = F)
 
 
 
 m <- bd2 %>%
   leaflet() %>% 
   addTiles() %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  clearMarkers() %>%
+      clearShapes() %>%
   addCircleMarkers(lng = ~LONGITUDE, lat = ~LATITUDE,
-                   radius = ~ sqrt(bd2$confirmed_m), stroke = FALSE, fillOpacity = 0.5,
-                   label = carai, color = ~palette2(bd2$confirmed_m),
+                   radius = ~ sqrt(bd2$conf_100k_m), stroke = FALSE, fillOpacity = 0.5,
+                   label = carai, color = ~palette2(bd2$conf_100k_m),
                    labelOptions = labelOptions(style = list("font-weight" = "normal", 
                                                             padding = "3px 8px"), 
                                                textsize = "13px", 
                                                direction = "auto")) %>%
-   addLegend(pal = palette2, values = ~confirmed_m, opacity=0.9, title = "Confirmados", position = "bottomright" )
+   addLegend(pal = palette2, values = ~confirmed_m, opacity=0.9, title = "Confirmados/100 mil habitantes", position = "bottomright" )
 
 m
 ```
