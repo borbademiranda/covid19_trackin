@@ -1,5 +1,5 @@
 ---
-runtime: shiny
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 ---
 
 ```{r setup, include=FALSE}
@@ -42,9 +42,7 @@ country_geoms = read.csv("data/country_geoms.csv")
 
 ```
 
-
 ```{r functions, include=FALSE, warning=FALSE}
-
 # function to plot cumulative COVID cases by date
 cumulative_plot = function(cv_aggregated, plot_date) {
   plot_df = subset(cv_aggregated, date<=plot_date)
@@ -110,9 +108,7 @@ new_cumulative_plot = function(cv_aggregated, plot_date) {
 
 
 ```{r mapa, echo=FALSE, warning=FALSE}
-
 ### DATA PROCESSING: COVID-19 ###
-
 # extract time stamp from cv_cases
 update = tail(cv_cases$last_update,1) 
 
@@ -190,7 +186,7 @@ if (all(cv_large_countries$alpha3 %in% worldcountry$id)==FALSE) { print("Error: 
 cv_large_countries = cv_large_countries[order(cv_large_countries$alpha3),]
 
 # create plotting parameters for map
-bins = c(0,1,10,50,100,500)
+bins = c(0,1,10,50,100,500, 1000)
 cv_pal <- colorBin("Reds", domain = cv_large_countries$per100k, bins = bins)
 plot_map <- worldcountry[worldcountry$id %in% cv_large_countries$alpha3, ]
 
@@ -252,7 +248,7 @@ carai <- paste(pais, '<br/>',
 
 
 ```{r mapa mundo, echo=FALSE, warning=FALSE, layout="l-screen-inset"}
-mybins <- c(0, 1, 10, 50, 100, 500)
+mybins <- c(0, 1, 10, 50, 100, 500, 1000)
 
 palette2 <- colorBin(palette="Reds", cv_cases$per100k, mybins, pretty = F)
 
@@ -261,12 +257,12 @@ palette3 <- colorBin(palette="Greys", cv_cases$per100k, mybins, pretty = F)
 m2 <- cv_cases %>%
       leaflet() %>% 
       addTiles() %>% 
-      addLayersControl(
-      position = "bottomright",
-      overlayGroups = c("Total", "Novos casos", 
-                      "Mortes"),
-      options = layersControlOptions(collapsed = FALSE)) %>% 
-      hideGroup(c("Novos casos", "Mortes"))  %>%
+      #addLayersControl(
+      #position = "bottomright",
+      #overlayGroups = c("Total", "Novos casos", 
+      #                "Mortes"),
+      #options = layersControlOptions(collapsed = FALSE)) %>% 
+      #hideGroup(c("Novos casos", "Mortes"))  %>%
       addProviderTiles(providers$CartoDB.Positron) %>%
       addLegend("bottomright", pal = palette2, values = ~per100k,
             title = "<small>Confirmados por 100 mil habitantes</small>") %>%
@@ -278,20 +274,20 @@ m2 <- cv_cases %>%
                  label = carai,
                  labelOptions = labelOptions(
                    style = list("font-weight" = "normal", padding = "3px 8px", "color" = covid_col),
-                   textsize = "15px", direction = "auto")) %>%
-      addCircleMarkers(lat = ~ latitude, lng = ~ longitude, weight = 1, radius = ~(new_cases)^(1/5), 
-                 fillOpacity = 0.5, color = ~ palette2(per100k), group = "Novos casos",
-                 label = carai,
-                 labelOptions = labelOptions(
-                   style = list("font-weight" = "normal", padding = "3px 8px", "color" = covid_col),
-                   textsize = "15px", direction = "auto")) %>%
-      addCircleMarkers(lat = ~ latitude, lng = ~ longitude, weight = 1, radius = ~(deaths)^(1/5), 
-                 fillOpacity = 0.1, color = ~ palette3(per100k), group = "Mortes",
-                 label = carai,
-                 labelOptions = labelOptions(
-                   style = list("font-weight" = "normal", padding = "3px 8px", "color" = covid_col),
-                   textsize = "15px", direction = "auto"))
+                   textsize = "15px", direction = "auto"))# %>%
+      #addCircleMarkers(lat = ~ latitude, lng = ~ longitude, weight = 1, radius = ~(new_cases)^(1/5), 
+       #          fillOpacity = 0.5, color = ~ palette2(per100k), group = "Novos casos",
+        #         label = carai,
+         #        labelOptions = labelOptions(
+          #         style = list("font-weight" = "normal", padding = "3px 8px", "color" = covid_col),
+           #        textsize = "15px", direction = "auto")) %>%
+      #addCircleMarkers(lat = ~ latitude, lng = ~ longitude, weight = 1, radius = ~(deaths)^(1/5), 
+       #          fillOpacity = 0.1, color = ~ palette3(per100k), group = "Mortes",
+        #         label = carai,
+         #        labelOptions = labelOptions(style = list("font-weight" = "normal", 
+          #                                                  padding = "3px 8px"), 
+           #                                    textsize = "13px", 
+            #                                   direction = "auto"))
+
 m2
-
 ```
-

@@ -8,7 +8,7 @@ navbar:
   - text: 'Brasil'
     href: report.html
   - text: 'Análise de sentimentos'
-    href: sentiment.htmlS
+    href: sentiment.html
   - text: 'Relatório'
     href: relatorio.html 
   - text: 'Sobre'
