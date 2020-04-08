@@ -1,5 +1,5 @@
 ---
-title: "Análise de sentimentos"
+title: "Análise de sentimentos (em desenvolvimento)"
 author: "Lucas Borba-Miranda"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 ---
@@ -43,7 +43,7 @@ Para a análise de frequência das palavras e *hashtags* transformamos o *corpus
 
 
 # Resultados
-A Figura \@ref(fig:cloud) ilustra as palavras mais frequentes nos *tweets* entre `r summary(tw$created_at)[[1]]` a `r summary(tw$created_at)[[6]]`
+A figura abaixo ilustra as palavras mais frequentes nos *tweets* entre `r summary(tw$created_at)[[1]]` a `r summary(tw$created_at)[[6]]`
 
 ```{r cloud, echo=FALSE, warning=FALSE, fig.align='center', fig.height=7, fig.width=7, fig.cap='Nuvem de palavras das palavras mais frequentes nos tweets'}
 # creating corpus
@@ -68,7 +68,30 @@ textplot_wordcloud(dfm1, rotation = .25,
 
 ```
 
-Já a Figura \@ref(fig:sentiment-data) ilustra a frequência de palavras contidas nos tweets de acordo com cada tipo de emoção. Observamos que as palavras consideradas positivas são maioria nos tweets dos brasileiros que mencionam os termos de busca utilizados. As emoções mais presentes são confiança e medo. Por último, observamos pequenas manifestações de alegria e surpresa com os tweets publicados quando se referem aos dois principais atores do combate ao coronavírus no Brasil.
+Quando olhamos para as hashtags mais frequentes nos tweets, podemos observar uma divisão entre as tags a favor de Bolsonaro e de Mandetta. A Figura abaixo mostra um diagrama de co-ocorrência entre as 50 hashtags mais frequentes. Observamos do lado esquerdo hashtags que apóiam as ações do ministro da saúde, que são contrárias ao posicionamento do presidente no que se refere ao combate à epidemia, bem como palavras que remetem à pandemia. No centro desta nuvem do lado esquerdo observamos hashtags como #bolsonaroacabou, #ficamandetta e #fiqueemcasa. Essas palavras interagem com maior frequência com outras hashtags como #meupresidenteémandetta, #bolsonarogenocida e #impeachmentbolsonaro. Já do lado direito observamos hashtags favoráveis ao presidente, como #foramandetta, #viruschines e #bolsonarotemrazao. Essa tags interagem com maior frequência com outras tags, como #globolixo, #bolsonaro2022 e #naopercamaistempo. Podemos também observar que os dois grupos de hashtag interagem minimamente, uma vez que praticamente não existe ligação entre as tags do lado esquerdo com as do lado direito da figura.
+
+```{r tags, echo=FALSE, warning=FALSE, message=FALSE}
+# dfm
+dfm2 <- dfm(corp, remove_punct = T)
+
+# selecting words that begin with tag
+dfm2 <- dfm_select(dfm2, ('#*'))
+
+# top 50 tags
+toptag <- names(topfeatures(dfm2, 50))
+
+# feature co-ocurrency matrix
+fcm_tag <- fcm(dfm2)
+
+# subsetting most frequent tags
+tag_fcm <- fcm_select(fcm_tag, (toptag))
+
+# plot
+set.seed(100); textplot_network(tag_fcm, min_freq = .3, edge_alpha = .3, edge_size = 3)
+
+```
+
+Já o gráfico de barras abaixo ilustra a contagem de palavras contidas nos tweets de acordo com cada tipo de emoção. Observamos que as palavras consideradas positivas são maioria nos tweets dos brasileiros que mencionam os termos de busca utilizados. As emoções mais presentes são confiança e medo. Por último, observamos pequenas manifestações de alegria e surpresa com os tweets publicados quando se referem aos dois principais atores do combate ao coronavírus no Brasil.
 
 ```{r sentiment-data, echo=FALSE}
 
