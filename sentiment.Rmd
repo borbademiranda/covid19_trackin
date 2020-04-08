@@ -17,39 +17,42 @@ library(lexiconPT)
 
 options(scipen = 999)
 ```
+
 # Introdução
 ```{r dados, include=FALSE}
 # twitter
 load(file = './data/twitter.RData')
 
+length(unique(tw$status_id))
+
 # salvando summary da data dos tweets
-tw_create <- summary(tw3$created_at)
+tw_create <- summary(tw$created_at)
 
 # dicionário de sentimentos
 dict <- read.csv('./data/sentimentos/dictionary_pt.csv')
 ```
 
-Como o brasileiro reage às respostas dos atores políticos à COVID-19? Compreendemos que, a nível nacional, os principais responsáveis pelo combate à pandemia são o chege do Executivo e o Ministro da Saúde, por ser o responsável pela pasta que lida diretamente com o problema. Para acessarmos a opinião dos indivíduos sobre as medidas que vêm sendo tomadas até então para miminizar os danos causados pelo coronavírus ao Brasil, realizamos uma análise de sentimentos de postagens de brasileiros no Twitter. Esta abordagem tem como objetivo mensurar sentimentos e emoções contidas no texto que compõem os *tweets* com o auxílio de dicionários específicos, que classificam palavras e expressões de acordo com a principal emoção a qual está ligada. Assim, podemos ter uma ideia de quais sentimentos (alegria, tristeza, medo, ansiedade, etc.) estão ligados à figura do presidente Jair Bolsonaro e do ministro da saúde, Luiz Henrique Mandetta. Nossos dados são compostos por `r nrow(tw3)` *tweets* baixados no período entre `r tw_create[[1]]` a `r tw_create[[6]]`. Apesar de não ser uma amostra representativa da população brasileira, tendo em vista que apenas 70% dos brasileiros possuem acesso à internet^[Disponível em: https://g1.globo.com/economia/tecnologia/noticia/2019/08/28/uso-da-internet-no-brasil-cresce-e-70percent-da-populacao-esta-conectada.ghtml] e apenas 8,28 milhões de usuários no Twitter^[Disponível em: https://www.tecmundo.com.br/redes-sociais/144654-brasil-10-paises-usuarios-twitter.htm], podemos ter uma ideia de como se comporta uma parte da população brasileira em relação aos principais atores políticos que deveriam estar combatendo a pandemia. 
+Como o brasileiro reage às respostas dos atores políticos à COVID-19? Compreendemos que, a nível nacional, os principais responsáveis pelo combate à pandemia são o chege do Executivo e o Ministro da Saúde, por ser o responsável pela pasta que lida diretamente com o problema. Para acessarmos a opinião dos indivíduos sobre as medidas que vêm sendo tomadas até então para miminizar os danos causados pelo coronavírus ao Brasil, realizamos uma análise de sentimentos de postagens de brasileiros no Twitter. Esta abordagem tem como objetivo mensurar sentimentos e emoções contidas no texto que compõem os *tweets* com o auxílio de dicionários específicos, que classificam palavras e expressões de acordo com a principal emoção a qual está ligada. Assim, podemos ter uma ideia de quais sentimentos (alegria, tristeza, medo, ansiedade, etc.) estão ligados à figura do presidente Jair Bolsonaro e do ministro da saúde, Luiz Henrique Mandetta. Nossos dados são compostos por `r nrow(tw)` *tweets* baixados no período entre `r tw_create[[1]]` a `r tw_create[[6]]`. Apesar de não ser uma amostra representativa da população brasileira, tendo em vista que apenas 70% dos brasileiros possuem acesso à internet^[Disponível em: https://g1.globo.com/economia/tecnologia/noticia/2019/08/28/uso-da-internet-no-brasil-cresce-e-70percent-da-populacao-esta-conectada.ghtml] e apenas 8,28 milhões de usuários no Twitter^[Disponível em: https://www.tecmundo.com.br/redes-sociais/144654-brasil-10-paises-usuarios-twitter.htm], podemos ter uma ideia de como se comporta uma parte da população brasileira em relação aos principais atores políticos que deveriam estar combatendo a pandemia. 
 
 # Metodologia
 
-Fizemos o download de `r nrow(tw3)` *tweets* no período que vai de `r tw_create[[1]]` a `r tw_create[[6]]` que mencionam uma das seguintes palavras: "bolsonaro", "presidente", "ministro da saude" e "mandetta". A API padrão do Twitter restringe o download dos *tweets* aos últimos sete dias, o que nos impede de analisar o total de *posts* desde o início da pandemia da covid-19 no Brasil, que registrou seu primeiro caso no dia 27 de fevereiro. Após os *tweets* serem coletados, transformamos o conteúdo dos *tweets* num  *corpus*^[Formato de objeto texto em linguagem natural para implementação de análise quantitativa de texto.] procedemos com a limpeza do texto removendo as *stopwords*^[palavras consideradas irrelevantes para o conjunto de resultados de uma busca. Ex: de, as, o, para, com, etc.] contidas nas postagens. 
+Fizemos o download de `r nrow(tw)` *tweets* no período que vai de `r tw_create[[1]]` a `r tw_create[[6]]` que mencionam uma das seguintes palavras: "bolsonaro", "presidente", "ministro da saude" e "mandetta". A API padrão do Twitter restringe o download dos *tweets* aos últimos sete dias, o que nos impede de analisar o total de *posts* desde o início da pandemia da covid-19 no Brasil, que registrou seu primeiro caso no dia 27 de fevereiro. Após os *tweets* serem coletados, transformamos o conteúdo dos *tweets* num  *corpus*^[Formato de objeto texto em linguagem natural para implementação de análise quantitativa de texto.] procedemos com a limpeza do texto removendo as *stopwords*^[palavras consideradas irrelevantes para o conjunto de resultados de uma busca. Ex: de, as, o, para, com, etc.] contidas nas postagens. 
 
 Para a análise de frequência das palavras e *hashtags* transformamos o *corpus* em um objeto denominado *document feature matrix* (DFM), que é formada por um conjunto de $d$ documentos e $p$ palavras. A DFM é uma matriz $D \times P$, onde $D = \{1, 2, 3, ..., d\}$ e $P = \{1, 2, 3, ..., p\}$, sendo $p$ igual ao número de palavras contidas no *corpus* correspondente ao conjunto de documentos. Cada elemento da matriz corresponde à quantidade de palavras $p$ contidas no documento $d$. A partir disso, calculamos a frequência total de cada palavra contida no *corpus* e elaboramos uma nuvem das palavras mais frequentes. 
 
 
 
 # Resultados
-A Figura \@ref(fig:cloud) ilustra as palavras mais frequentes nos *tweets* entre `r summary(tw3$created_at)[[1]]` a `r summary(tw3$created_at)[[6]]`
+A Figura \@ref(fig:cloud) ilustra as palavras mais frequentes nos *tweets* entre `r summary(tw$created_at)[[1]]` a `r summary(tw$created_at)[[6]]`
 
 ```{r cloud, echo=FALSE, warning=FALSE, fig.align='center', fig.height=7, fig.width=7, fig.cap='Nuvem de palavras das palavras mais frequentes nos tweets'}
 # creating corpus
-corp <- corpus(as.character(tw3$text))
+corp <- corpus(as.character(tw$text))
 
 # creating dfm
 dfm1 <- dfm(corp, remove = c(quanteda::stopwords('portuguese'), 
                              tm::stopwords('portuguese'), 
-                             'é', 't.co', 'https', 'pra', 'vai'),
+                             'é', 't.co', 'https', 'pra', 'vai', 'q', 'tá'),
             remove_twitter = T,
             stem = F, 
             remove_punct = T, 
@@ -65,18 +68,16 @@ textplot_wordcloud(dfm1, rotation = .25,
 
 ```
 
-Já a Figura \@ref(fig:sentiment-data) ilustra a contagem de palavras contidas nos tweets de acordo com cada tipo de emoção. Observamos que as palavras consideradas positivas são maioria nos tweets dos brasileiros que mencionam os termos de busca utilizados. As emoções mais presentes são confiança e medo. Por último, observamos pequenas manifestações de alegria e surpresa com os tweets publicados quando se referem aos dois principais atores do combate ao coronavírus no Brasil.
+Já a Figura \@ref(fig:sentiment-data) ilustra a frequência de palavras contidas nos tweets de acordo com cada tipo de emoção. Observamos que as palavras consideradas positivas são maioria nos tweets dos brasileiros que mencionam os termos de busca utilizados. As emoções mais presentes são confiança e medo. Por último, observamos pequenas manifestações de alegria e surpresa com os tweets publicados quando se referem aos dois principais atores do combate ao coronavírus no Brasil.
 
 ```{r sentiment-data, echo=FALSE}
 
 # subsetting emotions columns
-emo <- tw3[, c(1:10)]
-
-# summing frequency of words by emotion
-emobar <- colSums(emo)
+emo <- tw[, c(92:101)]
 
 # data.frame with counting by emotion
-emosum <- data.frame(count = emobar, emotion = names(emobar))
+emosum <- data.frame(count = emobar, freq = emobar / sum(emobar),
+                     emotion = names(emobar))
 
 # ordering factor
 emosum$emotion <- factor(emosum$emotion, 
@@ -84,7 +85,7 @@ emosum$emotion <- factor(emosum$emotion,
                                                        decreasing = T)])
 
 # plotting
-b1 <- ggplot(data = emosum, aes(x = emotion, y = count)) +
+b1 <- ggplot(data = emosum, aes(x = emotion, y = freq)) +
   geom_bar(stat = 'identity') +
   theme_minimal() +
   labs(x = '', y = '')
@@ -96,18 +97,19 @@ Também dividimos os tweets de acordo com o assunto que abordam. A atribuição 
 
 ```{r sentiment-both, echo=FALSE}
 # adding "subject" variable (which figure the text mentions)
-tw3$subject <- ifelse(str_detect(tw3$text, 'bolsonaro|presidente'), 'bolsonaro', 
-                      ifelse(str_detect(tw3$text, 'mandetta|ministro da saude'), 'mandetta', 'both'))
+tw$subject <- ifelse(duplicated(tw$status_id), 'Both', tw$subject)
 
 # subsetting emotions columns
-emo2 <- tw3[, c(1:10, 102)]
+emo2 <- tw[, c(91:101)]
 
 # plot with colors for each subject group
 b2 <- emo2 %>%
   group_by(subject) %>%
   summarize_all(funs(sum)) %>%
   gather(key = 'emotion', value = 'count', -subject) %>%
-  ggplot(aes(x = reorder(emotion, - count) , y = count, fill = subject)) +
+  group_by(subject) %>%
+  mutate(freq = count / sum(count)) %>%
+  ggplot(aes(x = reorder(emotion, - freq) , y = freq, fill = subject)) +
   geom_bar(stat = 'identity', position = 'dodge2') +
   theme_minimal() +
   labs(x = '', y = '')
