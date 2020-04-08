@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Lucas Borba-Miranda" />
+
+
+<title>Análise de sentimentos</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Covid 19 no Brasil e no Mundo</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Mundo</a>
+</li>
+<li>
+  <a href="report.html">Brasil</a>
+</li>
+<li>
+  <a href="sentiment.htmlS">Análise de sentimentos</a>
+</li>
+<li>
+  <a href="relatorio.html">Relatório</a>
+</li>
+<li>
+  <a href="about.html">Sobre</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Análise de sentimentos</h1>
+<h4 class="author">Lucas Borba-Miranda</h4>
+<h4 class="date">07 abril, 2020</h4>
+
+</div>
+
+
+<div id="introdução" class="section level1">
+<h1>Introdução</h1>
+<p>Como o brasileiro reage às respostas dos atores políticos à COVID-19? Compreendemos que, a nível nacional, os principais responsáveis pelo combate à pandemia são o chege do Executivo e o Ministro da Saúde, por ser o responsável pela pasta que lida diretamente com o problema. Para acessarmos a opinião dos indivíduos sobre as medidas que vêm sendo tomadas até então para miminizar os danos causados pelo coronavírus ao Brasil, realizamos uma análise de sentimentos de postagens de brasileiros no Twitter. Esta abordagem tem como objetivo mensurar sentimentos e emoções contidas no texto que compõem os <em>tweets</em> com o auxílio de dicionários específicos, que classificam palavras e expressões de acordo com a principal emoção a qual está ligada. Assim, podemos ter uma ideia de quais sentimentos (alegria, tristeza, medo, ansiedade, etc.) estão ligados à figura do presidente Jair Bolsonaro e do ministro da saúde, Luiz Henrique Mandetta. Nossos dados são compostos por 80328 <em>tweets</em> baixados no período entre 2020-03-30 02:27:16 a 2020-04-07 18:43:56. Apesar de não ser uma amostra representativa da população brasileira, tendo em vista que apenas 70% dos brasileiros possuem acesso à internet<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> e apenas 8,28 milhões de usuários no Twitter<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>, podemos ter uma ideia de como se comporta uma parte da população brasileira em relação aos principais atores políticos que deveriam estar combatendo a pandemia.</p>
+</div>
+<div id="metodologia" class="section level1">
+<h1>Metodologia</h1>
+<p>Fizemos o download de 80328 <em>tweets</em> no período que vai de 2020-03-30 02:27:16 a 2020-04-07 18:43:56 que mencionam uma das seguintes palavras: “bolsonaro”, “presidente”, “ministro da saude” e “mandetta”. A API padrão do Twitter restringe o download dos <em>tweets</em> aos últimos sete dias, o que nos impede de analisar o total de <em>posts</em> desde o início da pandemia da covid-19 no Brasil, que registrou seu primeiro caso no dia 27 de fevereiro. Após os <em>tweets</em> serem coletados, transformamos o conteúdo dos <em>tweets</em> num <em>corpus</em><a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a> procedemos com a limpeza do texto removendo as <em>stopwords</em><a href="#fn4" class="footnote-ref" id="fnref4"><sup>4</sup></a> contidas nas postagens.</p>
+<p>Para a análise de frequência das palavras e <em>hashtags</em> transformamos o <em>corpus</em> em um objeto denominado <em>document feature matrix</em> (DFM), que é formada por um conjunto de <span class="math inline">\(d\)</span> documentos e <span class="math inline">\(p\)</span> palavras. A DFM é uma matriz <span class="math inline">\(D \times P\)</span>, onde <span class="math inline">\(D = \{1, 2, 3, ..., d\}\)</span> e <span class="math inline">\(P = \{1, 2, 3, ..., p\}\)</span>, sendo <span class="math inline">\(p\)</span> igual ao número de palavras contidas no <em>corpus</em> correspondente ao conjunto de documentos. Cada elemento da matriz corresponde à quantidade de palavras <span class="math inline">\(p\)</span> contidas no documento <span class="math inline">\(d\)</span>. A partir disso, calculamos a frequência total de cada palavra contida no <em>corpus</em> e elaboramos uma nuvem das palavras mais frequentes.</p>
+</div>
+<div id="resultados" class="section level1">
+<h1>Resultados</h1>
+<p>A Figura @ref(fig:cloud) ilustra as palavras mais frequentes nos <em>tweets</em> entre 2020-03-30 02:27:16 a 2020-04-07 18:43:56</p>
+<div class="figure" style="text-align: center">
+<img src="sentiment_files/figure-html/cloud-1.png" alt="Nuvem de palavras das palavras mais frequentes nos tweets" width="672" />
+<p class="caption">
+Nuvem de palavras das palavras mais frequentes nos tweets
+</p>
+</div>
+<p>Já a Figura @ref(fig:sentiment-data) ilustra a contagem de palavras contidas nos tweets de acordo com cada tipo de emoção. Observamos que as palavras consideradas positivas são maioria nos tweets dos brasileiros que mencionam os termos de busca utilizados. As emoções mais presentes são confiança e medo. Por último, observamos pequenas manifestações de alegria e surpresa com os tweets publicados quando se referem aos dois principais atores do combate ao coronavírus no Brasil.</p>
+<p><img src="sentiment_files/figure-html/sentiment-data-1.png" width="1152" /></p>
+<p>Também dividimos os tweets de acordo com o assunto que abordam. A atribuição dos valores para esta variável ocorreu da seguinte forma: se um tweet mencionar a palavra “bolsonaro” ou “presidente”, o assunto deste tweet será classificado como “bolsonaro”. Caso mencione as palavras “mandetta” ou a expressão “ministro da saúde”, o assunto deste post será classificado como “mandetta”. Para todos os outros casos, o tweet recebeu a categoria “both” na variável assunto. Podemos observar que predominam tweets positivos em relação a Bolsonaro, bem como emoções de confiança. No entanto, devemos ter em mente que aproximadamente 55% das publicações pró-Bolsonaro no Twitter são realizadas por robôs<a href="#fn5" class="footnote-ref" id="fnref5"><sup>5</sup></a>.</p>
+<p><img src="sentiment_files/figure-html/sentiment-both-1.png" width="1152" /></p>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Disponível em: <a href="https://g1.globo.com/economia/tecnologia/noticia/2019/08/28/uso-da-internet-no-brasil-cresce-e-70percent-da-populacao-esta-conectada.ghtml" class="uri">https://g1.globo.com/economia/tecnologia/noticia/2019/08/28/uso-da-internet-no-brasil-cresce-e-70percent-da-populacao-esta-conectada.ghtml</a><a href="#fnref1" class="footnote-back">↩</a></p></li>
+<li id="fn2"><p>Disponível em: <a href="https://www.tecmundo.com.br/redes-sociais/144654-brasil-10-paises-usuarios-twitter.htm" class="uri">https://www.tecmundo.com.br/redes-sociais/144654-brasil-10-paises-usuarios-twitter.htm</a><a href="#fnref2" class="footnote-back">↩</a></p></li>
+<li id="fn3"><p>Formato de objeto texto em linguagem natural para implementação de análise quantitativa de texto.<a href="#fnref3" class="footnote-back">↩</a></p></li>
+<li id="fn4"><p>palavras consideradas irrelevantes para o conjunto de resultados de uma busca. Ex: de, as, o, para, com, etc.<a href="#fnref4" class="footnote-back">↩</a></p></li>
+<li id="fn5"><p>Disponível em: <a href="https://valor.globo.com/politica/noticia/2020/04/03/55-de-publicacoes-pro-bolsonaro-sao-feitas-por-robos.ghtml" class="uri">https://valor.globo.com/politica/noticia/2020/04/03/55-de-publicacoes-pro-bolsonaro-sao-feitas-por-robos.ghtml</a><a href="#fnref5" class="footnote-back">↩</a></p></li>
+</ol>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
