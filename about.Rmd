@@ -2,4 +2,4 @@
 title: "About"
 ---
 
-About.
+Eu sou Lucas Miranda, doutorando em Ciência Política pela Universidade Federal de Pernambuco - UFPE. No meu departamento, integro o Centro de Pesquisas em Comportamento Eleitoral e Opinião Pública, o Grupo de Métodos de Pesquisa em Ciência Política e o Grupo de Estudos sobre Partidos, Eleições e Comportamento Político. Meu projeto de pesquisa atual busca analisar em como os níveis de percepção de corrupção diminuem o apoio ao regime político nos países da América Latina. Tenho interesse nas seguintes áreas: Comportamento Eleitoral, Métodos Quantitativos e Inferência Causal. Meu email para contato é [lucas.borbamiranda@ufpe.br](<mailto:lucas.borbamiranda@ufpe.br?subject=Hyperlinks>).

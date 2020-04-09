@@ -6,6 +6,7 @@ date: "`r format(Sys.time(), '%d %B, %Y')`"
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
 ```
 
 ```{r packages, include=FALSE, warning=FALSE}
@@ -14,6 +15,8 @@ library(quanteda)
 library(tm)
 library(syuzhet)
 library(lexiconPT)
+library(tidytext)
+library(wordcloud)
 
 options(scipen = 999)
 ```
@@ -29,21 +32,19 @@ length(unique(tw$status_id))
 tw_create <- summary(tw$created_at)
 
 # dicionário de sentimentos
-dict <- read.csv('./data/sentimentos/dictionary_pt.csv')
+#dict <- read.csv('./data/sentimentos/dictionary_pt.csv')
 ```
 
-Como o brasileiro reage às respostas dos atores políticos à COVID-19? Compreendemos que, a nível nacional, os principais responsáveis pelo combate à pandemia são o chege do Executivo e o Ministro da Saúde, por ser o responsável pela pasta que lida diretamente com o problema. Para acessarmos a opinião dos indivíduos sobre as medidas que vêm sendo tomadas até então para miminizar os danos causados pelo coronavírus ao Brasil, realizamos uma análise de sentimentos de postagens de brasileiros no Twitter. Esta abordagem tem como objetivo mensurar sentimentos e emoções contidas no texto que compõem os *tweets* com o auxílio de dicionários específicos, que classificam palavras e expressões de acordo com a principal emoção a qual está ligada. Assim, podemos ter uma ideia de quais sentimentos (alegria, tristeza, medo, ansiedade, etc.) estão ligados à figura do presidente Jair Bolsonaro e do ministro da saúde, Luiz Henrique Mandetta. Nossos dados são compostos por `r nrow(tw)` *tweets* baixados no período entre `r tw_create[[1]]` a `r tw_create[[6]]`. Apesar de não ser uma amostra representativa da população brasileira, tendo em vista que apenas 70% dos brasileiros possuem acesso à internet^[Disponível em: https://g1.globo.com/economia/tecnologia/noticia/2019/08/28/uso-da-internet-no-brasil-cresce-e-70percent-da-populacao-esta-conectada.ghtml] e apenas 8,28 milhões de usuários no Twitter^[Disponível em: https://www.tecmundo.com.br/redes-sociais/144654-brasil-10-paises-usuarios-twitter.htm], podemos ter uma ideia de como se comporta uma parte da população brasileira em relação aos principais atores políticos que deveriam estar combatendo a pandemia. 
+Como o brasileiro reage às respostas dos atores políticos à COVID-19? Compreendemos que, a nível nacional, os principais responsáveis pelo combate à pandemia são o chefe do Executivo e o Ministro da Saúde, este último por ser o responsável pela pasta que lida diretamente com o problema. Para acessarmos a opinião dos indivíduos sobre as medidas que vêm sendo tomadas até então para miminizar os danos causados pelo coronavírus no Brasil, realizamos uma análise de sentimentos de postagens de brasileiros no Twitter. Esta abordagem tem como objetivo mensurar sentimentos e emoções contidas no texto que compõe os *tweets* com o auxílio de dicionários específicos que classificam palavras e expressões de acordo com a principal emoção a qual está ligada. Assim, podemos ter uma ideia de quais sentimentos (alegria, tristeza, medo, ansiedade, etc.) estão ligados à figura do presidente Jair Bolsonaro e do ministro da saúde, Luiz Henrique Mandetta. Nossos dados são compostos por `r nrow(tw)` *tweets* baixados no período entre `r tw_create[[1]]` a `r tw_create[[6]]`. Apesar de não ser uma amostra representativa da população brasileira, tendo em vista que o Brasil possui apenas 70% de sua população com acesso à internet^[Disponível em: https://g1.globo.com/economia/tecnologia/noticia/2019/08/28/uso-da-internet-no-brasil-cresce-e-70percent-da-populacao-esta-conectada.ghtml] e apenas 8,28 milhões de usuários no Twitter^[Disponível em: https://www.tecmundo.com.br/redes-sociais/144654-brasil-10-paises-usuarios-twitter.htm], podemos ter uma ideia de como se comporta uma parte da população brasileira em relação aos principais atores políticos que estão - ou deveriam estar - combatendo a pandemia. 
 
 # Metodologia
 
-Fizemos o download de `r nrow(tw)` *tweets* no período que vai de `r tw_create[[1]]` a `r tw_create[[6]]` que mencionam uma das seguintes palavras: "bolsonaro", "presidente", "ministro da saude" e "mandetta". A API padrão do Twitter restringe o download dos *tweets* aos últimos sete dias, o que nos impede de analisar o total de *posts* desde o início da pandemia da covid-19 no Brasil, que registrou seu primeiro caso no dia 27 de fevereiro. Após os *tweets* serem coletados, transformamos o conteúdo dos *tweets* num  *corpus*^[Formato de objeto texto em linguagem natural para implementação de análise quantitativa de texto.] procedemos com a limpeza do texto removendo as *stopwords*^[palavras consideradas irrelevantes para o conjunto de resultados de uma busca. Ex: de, as, o, para, com, etc.] contidas nas postagens. 
+Fizemos o download de `r nrow(tw)` *tweets* no período que vai de `r tw_create[[1]]` a `r tw_create[[6]]`. Foram selecionados apenas tweets que mencionam uma das seguintes palavras: "bolsonaro", "presidente", "ministro da saude" ou "mandetta". A API padrão do Twitter restringe o download dos *tweets* aos últimos sete dias, o que nos impede de analisar o total de *posts* desde o início da pandemia da covid-19 no Brasil, que registrou seu primeiro caso no dia 27 de fevereiro. Após os *tweets* serem coletados, transformamos seu conteúdo num  *corpus*^[Formato de objeto texto em linguagem natural para implementação de análise quantitativa de texto.] e procedemos com a limpeza do texto removendo as *stopwords*^[palavras consideradas irrelevantes para o conjunto de resultados de uma busca. Ex: de, as, o, para, com, etc.] e caracteres indevidos contidos nas postagens. 
 
-Para a análise de frequência das palavras e *hashtags* transformamos o *corpus* em um objeto denominado *document feature matrix* (DFM), que é formada por um conjunto de $d$ documentos e $p$ palavras. A DFM é uma matriz $D \times P$, onde $D = \{1, 2, 3, ..., d\}$ e $P = \{1, 2, 3, ..., p\}$, sendo $p$ igual ao número de palavras contidas no *corpus* correspondente ao conjunto de documentos. Cada elemento da matriz corresponde à quantidade de palavras $p$ contidas no documento $d$. A partir disso, calculamos a frequência total de cada palavra contida no *corpus* e elaboramos uma nuvem das palavras mais frequentes. 
-
-
+Para a análise de frequência das palavras e *hashtags* transformamos o *corpus* em um objeto denominado *document feature matrix* (DFM), que é formado por um conjunto de $d$ documentos e $p$ palavras. A DFM é uma matriz $D \times P$, onde $D = \{1, 2, 3, ..., d\}$ e $P = \{1, 2, 3, ..., p\}$, sendo $p$ igual ao número de palavras contidas no *corpus* correspondente ao conjunto de documentos. Cada elemento da matriz corresponde à quantidade de palavras $p$ contidas no documento $d$. A partir disso, calculamos a frequência total de cada palavra contida no *corpus* e elaboramos uma nuvem das palavras mais frequentes. 
 
 # Resultados
-A figura abaixo ilustra as palavras mais frequentes nos *tweets* entre `r summary(tw$created_at)[[1]]` a `r summary(tw$created_at)[[6]]`
+A figura abaixo ilustra as palavras mais frequentes nos *tweets* entre `r summary(tw$created_at)[[1]]` a `r summary(tw$created_at)[[6]]`. Observamos que os termos de busca ("presidente", "bolsonaro", "mandetta", "ministro" e "saúde") são as palavras mais frequentes no *corpus*, por motivos óbvios. Podemos ver próximos ao centro da nuvem palavras como "demissão", "demitir" e "caneta", que fazem alusão ao episódio de quase-demissão do ministro da saúde Luiz Henrique Mandetta. Também associados a tal episódio, vemos palavras/expressões como "osmarterra", e "foramandetta". 
 
 ```{r cloud, echo=FALSE, warning=FALSE, fig.align='center', fig.height=7, fig.width=7, fig.cap='Nuvem de palavras das palavras mais frequentes nos tweets'}
 # creating corpus
@@ -68,7 +69,7 @@ textplot_wordcloud(dfm1, rotation = .25,
 
 ```
 
-Quando olhamos para as hashtags mais frequentes nos tweets, podemos observar uma divisão entre as tags a favor de Bolsonaro e de Mandetta. A Figura abaixo mostra um diagrama de co-ocorrência entre as 50 hashtags mais frequentes. Observamos do lado esquerdo hashtags que apóiam as ações do ministro da saúde, que são contrárias ao posicionamento do presidente no que se refere ao combate à epidemia, bem como palavras que remetem à pandemia. No centro desta nuvem do lado esquerdo observamos hashtags como #bolsonaroacabou, #ficamandetta e #fiqueemcasa. Essas palavras interagem com maior frequência com outras hashtags como #meupresidenteémandetta, #bolsonarogenocida e #impeachmentbolsonaro. Já do lado direito observamos hashtags favoráveis ao presidente, como #foramandetta, #viruschines e #bolsonarotemrazao. Essa tags interagem com maior frequência com outras tags, como #globolixo, #bolsonaro2022 e #naopercamaistempo. Podemos também observar que os dois grupos de hashtag interagem minimamente, uma vez que praticamente não existe ligação entre as tags do lado esquerdo com as do lado direito da figura.
+Quando olhamos para as *hashtags* mais frequentes nos tweets, podemos observar uma divisão entre as *tags* a favor de Bolsonaro e de Mandetta. A figura abaixo mostra um diagrama de co-ocorrência entre as 50 *hashtags* mais frequentes no conjunto de postagens. Observamos do lado esquerdo hashtags que apóiam as ações do ministro da saúde, que são contrárias ao posicionamento do presidente no que se refere ao combate à epidemia, e também palavras que remetem à pandemia propriamente dita. No centro desta nuvem à esquerda, observamos *hashtags* como #bolsonaroacabou, #ficamandetta e #fiqueemcasa. Essas palavras ocorrem com maior frequência em conjunto a outras *tags* como #meupresidenteémandetta, #bolsonarogenocida e #impeachmentbolsonaro. Já do lado direito observamos *hashtags* favoráveis ao presidente, como #foramandetta, #viruschines e #bolsonarotemrazao. Essa tags interagem com maior frequência com outras tags, como #globolixo, #bolsonaro2022 e #naopercamaistempo. Podemos também observar que os dois grupos de *hashtags* interagem minimamente, uma vez que praticamente não existe ligação entre as *tags* do lado esquerdo com as do lado direito da figura.
 
 ```{r tags, echo=FALSE, warning=FALSE, message=FALSE}
 # dfm
@@ -91,12 +92,14 @@ set.seed(100); textplot_network(tag_fcm, min_freq = .3, edge_alpha = .3, edge_si
 
 ```
 
-Já o gráfico de barras abaixo ilustra a contagem de palavras contidas nos tweets de acordo com cada tipo de emoção. Observamos que as palavras consideradas positivas são maioria nos tweets dos brasileiros que mencionam os termos de busca utilizados. As emoções mais presentes são confiança e medo. Por último, observamos pequenas manifestações de alegria e surpresa com os tweets publicados quando se referem aos dois principais atores do combate ao coronavírus no Brasil.
+Já o gráfico de barras abaixo ilustra a proporção de palavras contidas nos tweets de acordo com cada tipo de emoção. Observamos que as palavras consideradas positivas são maioria nos tweets dos brasileiros que mencionam os termos de busca utilizados. As emoções mais presentes são confiança e medo. Por último, observamos pequenas manifestações de alegria e surpresa com os tweets publicados quando se referem aos dois principais atores do combate ao coronavírus no Brasil.
 
 ```{r sentiment-data, echo=FALSE}
 
 # subsetting emotions columns
 emo <- tw[, c(92:101)]
+
+emobar <- colSums(emo)
 
 # data.frame with counting by emotion
 emosum <- data.frame(count = emobar, freq = emobar / sum(emobar),
@@ -116,7 +119,23 @@ b1
 
 ```
 
-Também dividimos os tweets de acordo com o assunto que abordam. A atribuição dos valores para esta variável ocorreu da seguinte forma: se um tweet mencionar a palavra "bolsonaro" ou "presidente", o assunto deste tweet será classificado como "bolsonaro". Caso mencione as palavras "mandetta" ou a expressão "ministro da saúde", o assunto deste post será classificado como "mandetta". Para todos os outros casos, o tweet recebeu a categoria "both" na variável assunto. Podemos observar que predominam tweets positivos em relação a Bolsonaro, bem como emoções de confiança. No entanto, devemos ter em mente que aproximadamente 55% das publicações pró-Bolsonaro no Twitter são realizadas por robôs^[Disponível em: https://valor.globo.com/politica/noticia/2020/04/03/55-de-publicacoes-pro-bolsonaro-sao-feitas-por-robos.ghtml]. 
+Podemos também verificar a incidência de palavras por sentimento. Vemos que palavras como "demissão" e "sair" são as palavras mais frequentes que estão relacionadas ao sentimento de surpresa. As palavras mais frequentes que mensuram raiva são "louco", "crise" e "política". "Trabalho", "ministério" e "remédio" são os termos mais frequentes que estão relacionados a alegria. 
+
+```{r freq, echo=FALSE, warning=FALSE}
+load('./data/tokens.RData')
+
+tok %>%
+  filter(!sentiment %in% c('negative', 'positive')) %>%
+  count(term, sentiment, sort = T) %>%
+  spread(sentiment, n, fill = 0L) %>%
+  as.data.frame() %>% 
+  column_to_rownames("term") %>%
+  comparison.cloud(title.size = 1.5, max.words = 240)
+
+```
+
+
+Também dividimos os tweets de acordo com o assunto que abordam. A atribuição dos valores para esta variável ocorreu da seguinte forma: se um tweet mencionar a palavra "bolsonaro" ou "presidente", o assunto deste tweet será classificado como "Bolsonaro". Caso mencione as palavras "mandetta" ou a expressão "ministro da saúde", o assunto deste post será classificado como "Mandetta". Para todos os outros casos, o tweet recebeu a categoria "Both" para a variável assunto. Podemos observar que predominam tweets positivos em relação a Bolsonaro, bem como emoções de confiança. No entanto, devemos ter em mente que aproximadamente 55% das publicações pró-Bolsonaro no Twitter são realizadas por robôs^[Disponível em: https://valor.globo.com/politica/noticia/2020/04/03/55-de-publicacoes-pro-bolsonaro-sao-feitas-por-robos.ghtml]. No que se refere ao ministro da saúde, observamos uma maior frequência de palavras negativas. Quando comparamos os sentimentos de confiança e medo em relação a Bolsonaro e a Mandetta, podemos verificar que há mais menções de confiança relacionadas ao presidente do que ao ministro. O oposto ocorre em relação ao sentimento de medo: mais palavras que denotam medo estão relacionadas a Mandetta do que a Bolsonaro. 
 
 ```{r sentiment-both, echo=FALSE}
 # adding "subject" variable (which figure the text mentions)
