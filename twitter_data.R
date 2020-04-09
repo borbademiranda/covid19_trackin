@@ -58,3 +58,11 @@ tw <- cbind(tw, get_nrc_sentiment(tw$text, language = 'portuguese'))
 save(tw, file ='./data/twitter.RData')
 
 rm(list = ls())
+
+# tokenizing tweets
+tok <- tw %>% 
+  unnest_tokens(term, text) %>%
+  select(status_id, term, subject, created_at) %>%
+  merge(get_sentiment_dictionary('nrc', language = 'portuguese'), by.x = 'term', by.y = 'word')
+
+save(tok, './data/tokens.RData')
