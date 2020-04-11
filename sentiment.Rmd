@@ -17,6 +17,7 @@ library(syuzhet)
 library(lexiconPT)
 library(tidytext)
 library(wordcloud)
+library(lubridate)
 
 options(scipen = 999)
 ```
@@ -24,7 +25,9 @@ options(scipen = 999)
 # Introdução
 ```{r dados, include=FALSE}
 # twitter
-load(file = './data/twitter.RData')
+load(file = './data/twitter2.RData')
+
+tw <- tw[, -c(92:101)]
 
 length(unique(tw$status_id))
 
@@ -130,7 +133,7 @@ tok %>%
   spread(sentiment, n, fill = 0L) %>%
   as.data.frame() %>% 
   column_to_rownames("term") %>%
-  comparison.cloud(title.size = 1.5, max.words = 240)
+  comparison.cloud(title.size = 1.5, max.words = 400)
 
 ```
 
@@ -141,11 +144,19 @@ Também dividimos os tweets de acordo com o assunto que abordam. A atribuição 
 # adding "subject" variable (which figure the text mentions)
 tw$subject <- ifelse(duplicated(tw$status_id), 'Both', tw$subject)
 
+table(tw$subject)
+
 # subsetting emotions columns
 emo2 <- tw[, c(91:101)]
+head(emo2)
+
+summary(tw$positive)
+
+sum(is.na(emo2))
 
 # plot with colors for each subject group
 b2 <- emo2 %>%
+  na.omit() %>%
   group_by(subject) %>%
   summarize_all(funs(sum)) %>%
   gather(key = 'emotion', value = 'count', -subject) %>%
@@ -159,4 +170,20 @@ b2
 
 ```
 
+
+```{r line-sent, echo=FALSE}
+#head(tok)
+
+#l1 <- tok %>%
+#  filter(sentiment == 'positive') %>%
+#  group_by(subject, created_at) %>%
+#  summarize(n = n()) %>%
+#  group_by(created_at, subject) %>%
+#  summarise(mean = mean(n)) %>%
+#  ggplot(aes(x = created_at, y = mean, color = subject)) +
+#  geom_line(group = 1)
+#l1  
+
+
+```
 
