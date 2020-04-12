@@ -1,5 +1,4 @@
 ---
-title: "Covid19 Report"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 ---
 
@@ -19,8 +18,6 @@ library(rgdal)
 ```
 
 # Covid19 no Brasil
-
-Podemos observar no mapa interativo abaixo o número de infectados por município no Brasil. Podemos ver também o número de mortos, bem como a taxa de infectados e a taxa de mortalidade de um determinado município ao posicionarmos o mouse em cima da cidade desejada.
 
 ```{r covidbr, include=FALSE}
 # arquivo temporário para baixar dados
