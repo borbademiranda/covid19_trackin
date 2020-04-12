@@ -73,7 +73,7 @@ textplot_wordcloud(dfm1, rotation = .25,
 
 ```
 
-Quando olhamos para as *hashtags* mais frequentes nos tweets, podemos observar uma divisão entre as *tags* a favor de Bolsonaro e de Mandetta. A figura abaixo mostra um diagrama de co-ocorrência entre as 50 *hashtags* mais frequentes no conjunto de postagens. Observamos do lado esquerdo hashtags que apóiam as ações do ministro da saúde, que são contrárias ao posicionamento do presidente no que se refere ao combate à epidemia, e também palavras que remetem à pandemia propriamente dita. No centro desta nuvem à esquerda, observamos *hashtags* como #bolsonaroacabou, #ficamandetta e #fiqueemcasa. Essas palavras ocorrem com maior frequência em conjunto a outras *tags* como #meupresidenteémandetta, #bolsonarogenocida e #impeachmentbolsonaro. Já do lado direito observamos *hashtags* favoráveis ao presidente, como #foramandetta, #viruschines e #bolsonarotemrazao. Essa tags interagem com maior frequência com outras tags, como #globolixo, #bolsonaro2022 e #naopercamaistempo. Podemos também observar que os dois grupos de *hashtags* interagem minimamente, uma vez que praticamente não existe ligação entre as *tags* do lado esquerdo com as do lado direito da figura.
+Quando olhamos para as *hashtags* mais frequentes nos tweets, podemos observar uma divisão entre as *tags* a favor de Bolsonaro e de Mandetta. A figura abaixo mostra um diagrama de co-ocorrência entre as 50 *hashtags* mais frequentes no conjunto de postagens. Observamos do lado direito hashtags que apóiam as ações do ministro da saúde, que são contrárias ao posicionamento do presidente no que se refere ao combate à epidemia, e também palavras que remetem à pandemia propriamente dita. No centro desta nuvem à esquerda, observamos *hashtags* como #bolsonaroacabou, #ficamandetta e #fiqueemcasa. Essas palavras ocorrem com maior frequência em conjunto a outras *tags* como #meupresidenteémandetta, #bolsonarogenocida e #impeachmentbolsonaro. Já do lado esquerdo vemos *hashtags* favoráveis ao presidente, como #foramandetta, #viruschines e #bolsonarotemrazao. Essa tags interagem com maior frequência com outras tags, como #globolixo, #bolsonaro2022 e #naopercamaistempo. Podemos também observar que os dois grupos de *hashtags* interagem minimamente, uma vez que praticamente não existe ligação entre as *tags* do lado esquerdo com as do lado direito da figura.
 
 ```{r tags, echo=FALSE, warning=FALSE, message=FALSE}
 # dfm
@@ -165,7 +165,7 @@ b2
 ```
 Na figura abaixo vemos algumas tendências da frequência de palavras positivas e negativas associadas a cada personagem. Verificamos um pico de tweets positivos em relação ao ministro da saúde no dia 6 de abril, data do episódio em que circularam rumores da demissão de Mandetta pelo presidente Bolsonaro. Os horários presentes no eixo x do gráfico estão no horário de Greenwich, portanto, 3 horas a mais do que no horário de Brasília. Também é observado um pico de palavras negativas em relação ao ministro. Se compararmos ambos os gráficos, podemos verificar que se sobressaem as palavras negativas ao ministro em relação às palavras posivitas. Há também uma maior prevalência de palavras negativas dirigidas ao presidente Bolsonaro na data do episódio. 
 
-```{r line-sent, echo=FALSE}
+```{r line-sent, echo=FALSE, fig.width=10}
 # positive sentiment
 l1 <- tok %>%
   filter(sentiment == 'positive') %>%
@@ -177,7 +177,7 @@ l1 <- tok %>%
   theme_minimal() +
   labs(x = '', y = '') +
   scale_x_datetime(breaks = date_breaks('8 hour')) +
-  theme(axis.text.x = element_text(angle = 90)) +
+  theme(axis.text.x = element_text(angle = 90), legend.position = 'bottom') +
   ggtitle('Frequência de palavras positivas') +
   scale_y_continuous(limits = c(0, .15), breaks = seq(0, .15, .025))
 
@@ -192,7 +192,7 @@ l2 <- tok %>%
   theme_minimal() +
   labs(x = '', y = '') +
   scale_x_datetime(breaks = date_breaks('8 hour')) +
-  theme(axis.text.x = element_text(angle = 90)) +
+  theme(axis.text.x = element_text(angle = 90), legend.position = 'bottom') +
   ggtitle('Frequência de palavras negativas') +
   scale_y_continuous(limits = c(0, .15), breaks = seq(0, .15, .025))
 
@@ -202,7 +202,7 @@ temp
 
 O gráfico abaixo denota comparativamente a frequência de sentimentos e emoções atribuídos a cada uma das figuras. Observamos que há uma maior frequência de termos positivos associados ao presidente compatativamente com o ministro da saúde. No que se refere a palavras associadas a sentimentos negativos, observamos uma maior prevalência de tais palavras em tweets que mencionam o ministro da saúde do que em tweets que mencionam Bolsonaro. Cabe mais uma vez lembrar aqui a incidência do número de robôs associados a tweets em apoio ao presidente, como já mencionado nesta página.
 
-```{r radar, echo=FALSE}
+```{r radar, echo=FALSE, warning=FALSE}
 emo2 <- emo %>%
   na.omit() %>%
   group_by(subject) %>%
