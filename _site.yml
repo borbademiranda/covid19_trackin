@@ -1,17 +1,15 @@
 name: "covid19_dcpUFPE"
 output_dir: 'docs'
 navbar:
-  title: "Covid 19 no Brasil e no Mundo"
+  title: "Covid-19 no Brasil"
   left:
   - text: "Mundo"
     href: index.html
   - text: 'Brasil'
     href: report.html
-  - text: 'Análise de sentimentos'
+  - text: 'Análise de Sentimentos'
     href: sentiment.html
-  - text: 'Relatório'
-    href: relatorio.html 
-  - text: 'Sobre'
+  - text: 'Sobre mim'
     href: about.html
 output:
   html_document:
