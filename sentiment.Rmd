@@ -18,6 +18,9 @@ library(lexiconPT)
 library(tidytext)
 library(wordcloud)
 library(lubridate)
+library(scales)
+library(ggpubr)
+library(radarchart)
 
 options(scipen = 999)
 ```
@@ -26,8 +29,6 @@ options(scipen = 999)
 ```{r dados, include=FALSE}
 # twitter
 load(file = './data/twitter2.RData')
-
-tw <- tw[, -c(92:101)]
 
 length(unique(tw$status_id))
 
@@ -133,29 +134,22 @@ tok %>%
   spread(sentiment, n, fill = 0L) %>%
   as.data.frame() %>% 
   column_to_rownames("term") %>%
-  comparison.cloud(title.size = 1.5, max.words = 400)
+  comparison.cloud(title.size = 1.5, max.words = 320)
 
 ```
 
 
 Também dividimos os tweets de acordo com o assunto que abordam. A atribuição dos valores para esta variável ocorreu da seguinte forma: se um tweet mencionar a palavra "bolsonaro" ou "presidente", o assunto deste tweet será classificado como "Bolsonaro". Caso mencione as palavras "mandetta" ou a expressão "ministro da saúde", o assunto deste post será classificado como "Mandetta". Para todos os outros casos, o tweet recebeu a categoria "Both" para a variável assunto. Podemos observar que predominam tweets positivos em relação a Bolsonaro, bem como emoções de confiança. No entanto, devemos ter em mente que aproximadamente 55% das publicações pró-Bolsonaro no Twitter são realizadas por robôs^[Disponível em: https://valor.globo.com/politica/noticia/2020/04/03/55-de-publicacoes-pro-bolsonaro-sao-feitas-por-robos.ghtml]. No que se refere ao ministro da saúde, observamos uma maior frequência de palavras negativas. Quando comparamos os sentimentos de confiança e medo em relação a Bolsonaro e a Mandetta, podemos verificar que há mais menções de confiança relacionadas ao presidente do que ao ministro. O oposto ocorre em relação ao sentimento de medo: mais palavras que denotam medo estão relacionadas a Mandetta do que a Bolsonaro. 
 
-```{r sentiment-both, echo=FALSE}
+```{r sentiment-both, echo=FALSE, warning=FALSE, message=FALSE}
 # adding "subject" variable (which figure the text mentions)
 tw$subject <- ifelse(duplicated(tw$status_id), 'Both', tw$subject)
 
-table(tw$subject)
-
 # subsetting emotions columns
-emo2 <- tw[, c(91:101)]
-head(emo2)
-
-summary(tw$positive)
-
-sum(is.na(emo2))
+emo$subject <- tw$subject
 
 # plot with colors for each subject group
-b2 <- emo2 %>%
+b2 <- emo %>%
   na.omit() %>%
   group_by(subject) %>%
   summarize_all(funs(sum)) %>%
@@ -169,21 +163,61 @@ b2 <- emo2 %>%
 b2
 
 ```
-
+Na figura abaixo vemos algumas tendências da frequência de palavras positivas e negativas associadas a cada personagem. Verificamos um pico de tweets positivos em relação ao ministro da saúde no dia 6 de abril, data do episódio em que circularam rumores da demissão de Mandetta pelo presidente Bolsonaro. Os horários presentes no eixo x do gráfico estão no horário de Greenwich, portanto, 3 horas a mais do que no horário de Brasília. Também é observado um pico de palavras negativas em relação ao ministro. Se compararmos ambos os gráficos, podemos verificar que se sobressaem as palavras negativas ao ministro em relação às palavras posivitas. Há também uma maior prevalência de palavras negativas dirigidas ao presidente Bolsonaro na data do episódio. 
 
 ```{r line-sent, echo=FALSE}
-#head(tok)
+# positive sentiment
+l1 <- tok %>%
+  filter(sentiment == 'positive') %>%
+  group_by(subject, hour = as.POSIXct(trunc(created_at, 'hour'))) %>%
+  summarize(n = n()) %>%
+  mutate(freq = n / sum(n)) %>%
+  ggplot(aes(x = hour, y = freq, color = subject)) +
+  geom_line() +
+  theme_minimal() +
+  labs(x = '', y = '') +
+  scale_x_datetime(breaks = date_breaks('8 hour')) +
+  theme(axis.text.x = element_text(angle = 90)) +
+  ggtitle('Frequência de palavras positivas') +
+  scale_y_continuous(limits = c(0, .15), breaks = seq(0, .15, .025))
 
-#l1 <- tok %>%
-#  filter(sentiment == 'positive') %>%
-#  group_by(subject, created_at) %>%
-#  summarize(n = n()) %>%
-#  group_by(created_at, subject) %>%
-#  summarise(mean = mean(n)) %>%
-#  ggplot(aes(x = created_at, y = mean, color = subject)) +
-#  geom_line(group = 1)
-#l1  
+# negative sentiment
+l2 <- tok %>%
+  filter(sentiment == 'negative') %>%
+  group_by(subject, hour = as.POSIXct(trunc(created_at, 'hour'))) %>%
+  summarize(n = n()) %>%
+  mutate(freq = n / sum(n)) %>%
+  ggplot(aes(x = hour, y = freq, color = subject)) +
+  geom_line() +
+  theme_minimal() +
+  labs(x = '', y = '') +
+  scale_x_datetime(breaks = date_breaks('8 hour')) +
+  theme(axis.text.x = element_text(angle = 90)) +
+  ggtitle('Frequência de palavras negativas') +
+  scale_y_continuous(limits = c(0, .15), breaks = seq(0, .15, .025))
 
-
+temp <- ggarrange(l1, l2, ncol = 2)
+temp
 ```
 
+O gráfico abaixo denota comparativamente a frequência de sentimentos e emoções atribuídos a cada uma das figuras. Observamos que há uma maior frequência de termos positivos associados ao presidente compatativamente com o ministro da saúde. No que se refere a palavras associadas a sentimentos negativos, observamos uma maior prevalência de tais palavras em tweets que mencionam o ministro da saúde do que em tweets que mencionam Bolsonaro. Cabe mais uma vez lembrar aqui a incidência do número de robôs associados a tweets em apoio ao presidente, como já mencionado nesta página.
+
+```{r radar, echo=FALSE}
+emo2 <- emo %>%
+  na.omit() %>%
+  group_by(subject) %>%
+  summarize_all(funs(sum)) %>%
+  gather(key = 'emotion', value = 'count', -subject) %>%
+  spread(subject, count)
+
+rownames(emo2) <- emo2$emotion
+
+emo3 <- lapply(emo2[ , -1], function(x) x/sum(x, na.rm=TRUE)) %>% as.data.frame()
+
+emo2 <- cbind(emo2$emotion, emo3)
+
+
+emo2 %>% 
+  chartJSRadar(polyAlpha = 0.1)
+
+```

@@ -23,6 +23,9 @@
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<script src="site_libs/htmlwidgets-1.5.1/htmlwidgets.js"></script>
+<script src="site_libs/chart.js-2.4.0/./dist/Chart.min.js"></script>
+<script src="site_libs/chartJSRadar-binding-0.3.1/chartJSRadar.js"></script>
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css">
@@ -301,7 +304,7 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">Análise de sentimentos (em desenvolvimento)</h1>
 <h4 class="author">Lucas Borba-Miranda</h4>
-<h4 class="date">10 abril, 2020</h4>
+<h4 class="date">12 abril, 2020</h4>
 
 </div>
 
@@ -331,20 +334,12 @@ Nuvem de palavras das palavras mais frequentes nos tweets
 <p>Podemos também verificar a incidência de palavras por sentimento. Vemos que palavras como “demissão” e “sair” são as palavras mais frequentes que estão relacionadas ao sentimento de surpresa. As palavras mais frequentes que mensuram raiva são “louco”, “crise” e “política”. “Trabalho”, “ministério” e “remédio” são os termos mais frequentes que estão relacionados a alegria.</p>
 <p><img src="sentiment_files/figure-html/freq-1.png" width="1152" /></p>
 <p>Também dividimos os tweets de acordo com o assunto que abordam. A atribuição dos valores para esta variável ocorreu da seguinte forma: se um tweet mencionar a palavra “bolsonaro” ou “presidente”, o assunto deste tweet será classificado como “Bolsonaro”. Caso mencione as palavras “mandetta” ou a expressão “ministro da saúde”, o assunto deste post será classificado como “Mandetta”. Para todos os outros casos, o tweet recebeu a categoria “Both” para a variável assunto. Podemos observar que predominam tweets positivos em relação a Bolsonaro, bem como emoções de confiança. No entanto, devemos ter em mente que aproximadamente 55% das publicações pró-Bolsonaro no Twitter são realizadas por robôs<a href="#fn5" class="footnote-ref" id="fnref5"><sup>5</sup></a>. No que se refere ao ministro da saúde, observamos uma maior frequência de palavras negativas. Quando comparamos os sentimentos de confiança e medo em relação a Bolsonaro e a Mandetta, podemos verificar que há mais menções de confiança relacionadas ao presidente do que ao ministro. O oposto ocorre em relação ao sentimento de medo: mais palavras que denotam medo estão relacionadas a Mandetta do que a Bolsonaro.</p>
-<pre><code>## 
-## Bolsonaro      Both  Mandetta 
-##    644582     62970    235065</code></pre>
-<pre><code>##     subject anger anticipation disgust fear joy sadness surprise trust negative positive
-## 1 Bolsonaro     1            0       0    1   1       2        0     2        2        2
-## 2 Bolsonaro     1            0       0    1   0       2        0     0        1        0
-## 3 Bolsonaro     0            0       0    0   0       0        0     0        0        0
-## 4 Bolsonaro     0            0       0    0   0       0        0     0        0        0
-## 5 Bolsonaro     0            0       0    0   0       0        0     2        0        2
-## 6 Bolsonaro     0            0       0    2   0       2        0     4        2        3</code></pre>
-<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##   0.000   0.000   2.000   1.587   2.000  18.000</code></pre>
-<pre><code>## [1] 0</code></pre>
-<p><img src="sentiment_files/figure-html/sentiment-both-1.png" width="1152" /></p>
+<p><img src="sentiment_files/figure-html/sentiment-both-1.png" width="1152" /> Na figura abaixo vemos algumas tendências da frequência de palavras positivas e negativas associadas a cada personagem. Verificamos um pico de tweets positivos em relação ao ministro da saúde no dia 6 de abril, data do episódio em que circularam rumores da demissão de Mandetta pelo presidente Bolsonaro. Os horários presentes no eixo x do gráfico estão no horário de Greenwich, portanto, 3 horas a mais do que no horário de Brasília. Também é observado um pico de palavras negativas em relação ao ministro. Se compararmos ambos os gráficos, podemos verificar que se sobressaem as palavras negativas ao ministro em relação às palavras posivitas. Há também uma maior prevalência de palavras negativas dirigidas ao presidente Bolsonaro na data do episódio.</p>
+<p><img src="sentiment_files/figure-html/line-sent-1.png" width="1152" /></p>
+<p>O gráfico abaixo denota comparativamente a frequência de sentimentos e emoções atribuídos a cada uma das figuras. Observamos que há uma maior frequência de termos positivos associados ao presidente compatativamente com o ministro da saúde. No que se refere a palavras associadas a sentimentos negativos, observamos uma maior prevalência de tais palavras em tweets que mencionam o ministro da saúde do que em tweets que mencionam Bolsonaro. Cabe mais uma vez lembrar aqui a incidência do número de robôs associados a tweets em apoio ao presidente, como já mencionado nesta página.</p>
+<pre><code>## Warning: Setting row names on a tibble is deprecated.</code></pre>
+<canvas id="htmlwidget-db9b4e9eb3e070b4a1aa" class="chartJSRadar html-widget" width="1152" height="816"></canvas>
+<script type="application/json" data-for="htmlwidget-db9b4e9eb3e070b4a1aa">{"x":{"data":{"labels":["anger","anticipation","disgust","fear","joy","negative","positive","sadness","surprise","trust"],"datasets":[{"label":"Bolsonaro","data":[0.0659269810900917,0.0365005797415665,0.0511047420894913,0.0783630557864167,0.0318780731744374,0.174266490092199,0.243597326532385,0.077963037275259,0.0247371193722435,0.21566259484591],"backgroundColor":"rgba(255,0,0,0.1)","borderColor":"rgba(255,0,0,0.8)","pointBackgroundColor":"rgba(255,0,0,0.8)","pointBorderColor":"#fff","pointHoverBackgroundColor":"#fff","pointHoverBorderColor":"rgba(255,0,0,0.8)"},{"label":"Both","data":[0.0650882025958486,0.039730235340867,0.046686430953731,0.0916806936550388,0.0285860349238524,0.196733534845718,0.227688158840575,0.0882137579083193,0.0287936492345059,0.186799301701544],"backgroundColor":"rgba(0,255,0,0.1)","borderColor":"rgba(0,255,0,0.8)","pointBackgroundColor":"rgba(0,255,0,0.8)","pointBorderColor":"#fff","pointHoverBackgroundColor":"#fff","pointHoverBorderColor":"rgba(0,255,0,0.8)"},{"label":"Mandetta","data":[0.0726234653308452,0.0486135255074568,0.0520855259994024,0.102536752039721,0.0357551403976402,0.221593887891595,0.190366381196326,0.102182771971401,0.03442988317081,0.139812666494801],"backgroundColor":"rgba(0,0,255,0.1)","borderColor":"rgba(0,0,255,0.8)","pointBackgroundColor":"rgba(0,0,255,0.8)","pointBorderColor":"#fff","pointHoverBackgroundColor":"#fff","pointHoverBorderColor":"rgba(0,0,255,0.8)"}]},"options":{"responsive":true,"title":{"display":false,"text":null},"scale":{"ticks":{"min":0},"pointLabels":{"fontSize":18}},"tooltips":{"enabled":true,"mode":"label"},"legend":{"display":true}}},"evals":[],"jsHooks":[]}</script>
 </div>
 <div class="footnotes">
 <hr />
