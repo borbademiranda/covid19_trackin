@@ -1,4 +1,5 @@
 ---
+title: 'Covid-19 no Brasil'
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 ---
 
@@ -7,287 +8,223 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r packages, include=FALSE}
-if(!require(magrittr)) install.packages("magrittr", repos = "http://cran.us.r-project.org")
-if(!require(rvest)) install.packages("rvest", repos = "http://cran.us.r-project.org")
-if(!require(readxl)) install.packages("readxl", repos = "http://cran.us.r-project.org")
-if(!require(dplyr)) install.packages("dplyr", repos = "http://cran.us.r-project.org")
-if(!require(maps)) install.packages("maps", repos = "http://cran.us.r-project.org")
-if(!require(ggplot2)) install.packages("ggplot2", repos = "http://cran.us.r-project.org")
-if(!require(reshape2)) install.packages("reshape2", repos = "http://cran.us.r-project.org")
-if(!require(ggiraph)) install.packages("ggiraph", repos = "http://cran.us.r-project.org")
-if(!require(RColorBrewer)) install.packages("RColorBrewer", repos = "http://cran.us.r-project.org")
-if(!require(leaflet)) install.packages("leaflet", repos = "http://cran.us.r-project.org")
-if(!require(plotly)) install.packages("plotly", repos = "http://cran.us.r-project.org")
-if(!require(geojsonio)) install.packages("geojsonio", repos = "http://cran.us.r-project.org")
-if(!require(shiny)) install.packages("shiny", repos = "http://cran.us.r-project.org")
-if(!require(shinyWidgets)) install.packages("shinyWidgets", repos = "http://cran.us.r-project.org")
-if(!require(shinydashboard)) install.packages("shinydashboard", repos = "http://cran.us.r-project.org")
-if(!require(shinythemes)) install.packages("shinythemes", repos = "http://cran.us.r-project.org")
+library(tidyverse)
+library(leaflet)
+library(readxl)
+library(RCurl)
+library(stringr)
+library(htmltools)
+library(rgdal)
+library(shiny)
+library(plotly)
+library(lubridate)
+library(kableExtra)
+library(data.table)
+```
+
+
+```{r covidbr, include=FALSE}
+# arquivo temporário para baixar dados
+temp <- tempfile()
+
+# braixando dados
+download.file("https://data.brasil.io/dataset/covid19/caso.csv.gz", temp)
+
+brazil <- as.data.frame(data.table::fread('https://www.brasil.io/dataset/covid19/caso?format=csv'))
+
+# importando
+#brazil <- read.csv('https://data.brasil.io/dataset/covid19/caso.csv.gz',
+ #                  sep = ",", header = T, stringsAsFactors = F, encoding = 'UTF-8')
+names(brazil)
+
+table(brazil$is_last)
+
+brazil$is_last <- as.logical(brazil$is_last)
+brazil$date <- as.Date(brazil$date)
+brazil$date_2 <- as.Date(brazil$date) %>% format('%d/%m/%Y')
 
 ```
 
 
-```{r definindo objetos, include=FALSE}
-# update data with automated script
+```{r geodata, include=FALSE, warning=FALSE}
+# coordenadas dos municípios brasileiros
+mun <- read.csv('C:/Users/borba/OneDrive/Área de Trabalho/2020/covid_tracking/data/mun_coord.csv', encoding = 'UTF-8')
 
-# set mapping colour for each outbreak
-covid_col = "#cc4c02"
-covid_other_col = "#662506"
+mun$city <- mun$NOME_MUNICIPIO
 
-# import data
-cv_cases = read.csv("data/coronavirus.csv")
-countries = read.csv("data/countries_codes_and_coordinates.csv")
-worldcountry = geojson_read("data/countries.geo.json", what = "sp")
-country_geoms = read.csv("data/country_geoms.csv")
+# transformando os nomes dos municípios para caixa alta
+brazil$city <- toupper(brazil$city)
 
-```
+# mergindo dados
+bd <- merge(mun, brazil %>% filter(is_last == T), by = 'city')
 
-```{r functions, include=FALSE, warning=FALSE}
-# function to plot cumulative COVID cases by date
-cumulative_plot = function(cv_aggregated, plot_date) {
-  plot_df = subset(cv_aggregated, date<=plot_date)
-  g1 = ggplot(plot_df, aes(x = date, y = cases, color = region)) + geom_line() + geom_point(size = 1, alpha = 0.8) +
-    ylab("Total de casos") + theme_bw() + 
-    scale_colour_manual(values=c(covid_col)) +
-    scale_y_continuous(labels = function(l) {trans = l / 1000; paste0(trans, "K")}) +
-    theme(legend.title = element_blank(), legend.position = "", plot.title = element_text(size=10), 
-          plot.margin = margin(5, 12, 5, 5))
-  g1
-}
+# ajustando o conteúdo da variável a ser plotada
+cidade <- paste('Cidade:', bd$city)
+confirmados <- paste('Casos confirmados:', bd$confirmed)
+mortos <- paste('Mortos:', bd$deaths)
+taxa_100k <- paste('Infectados/100 mil habitantes', bd$confirmed_per_100k_inhabitants)
+mortalidade <- paste('Taxa de mortalidade', bd$death_rate)
+atualizado <- paste('Atualizado em:', bd$date_2)
 
-# function to plot new COVID cases by date
-new_cases_plot = function(cv_aggregated, plot_date) {
-  plot_df_new = subset(cv_aggregated, date<=plot_date)
-  g1 = ggplot(plot_df_new, aes(x = date, y = new, fill = region)) + 
-    geom_bar(position="stack", stat="identity") + 
-    ylab("Novos casos") + theme_bw() + 
-    scale_fill_manual(values=c(covid_col)) +
-    scale_y_continuous(labels = function(l) {trans = l / 1000; paste0(trans, "K")}) +
-    theme(legend.title = element_blank(), legend.position = "", plot.title = element_text(size=10), 
-          plot.margin = margin(5, 12, 5, 5))
-  g1
-}
-
-# function to render plotly of epidemic comparison depending on selected outcome
-comparison_plot = function(epi_comp, comparison) {
-  epi_comp$outcome = epi_comp[,comparison] 
-  epi_comp = epi_comp[order(epi_comp$outcome),]
-  epi_comp$outbreak = factor(epi_comp$outbreak, levels=epi_comp$outbreak)
-  
-  p1 <- ggplot(epi_comp, aes(x = outbreak, y = outcome, fill=outbreak, text = paste0(outbreak, ": ",outcome))) + geom_bar(alpha = 0.8, stat="identity") +
-    ylab("N") + xlab("") + theme_bw() + 
-    scale_fill_manual(values=c("2019-COVID"=covid_col)) +
-    theme(legend.position = "")
-  
-  if(comparison == "cfr") { p1 = p1 + ylab("%") }
-  if(comparison == "deaths") { p1 = p1 + scale_y_continuous(labels = function(l) {trans = l / 1000; paste0(trans, "K")}) }
-  if(comparison == "cases") { p1 = p1 + scale_y_continuous(trans='log10', limits = c(1,1e8), breaks=c(1,1000,1e6,1e9), labels = function(l) {trans = l / 1000; paste0(trans, "K")}) }
-  ggplotly(p1 + coord_flip(), tooltip = c("text")) %>% layout(showlegend = FALSE)
-}
-
-names(cv_aggregated)
-
-# new cases by cumulative cases log
-new_cumulative_plot = function(cv_aggregated, plot_date) {
-  plot_df = subset(cv_aggregated, date <= plot_date)
-  g1 = ggplot(plot_df, aes(x = cases, y = new, color = region)) + 
-    geom_line() + geom_point(size = 1, alpha = 0.8) +
-    labs(y = "Novos casos (log)", x = 'Total de casos (log)') + 
-    theme_bw() + 
-    scale_colour_manual(values=c(covid_col)) +
-    scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
-                labels = trans_format("log10", math_format(10^.x))) +
-  scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x),
-                labels = trans_format("log10", math_format(10^.x))) +
-    theme(legend.title = element_blank(), legend.position = "", plot.title = element_text(size=10), 
-          plot.margin = margin(5, 12, 5, 5))
-  g1
-}
-
-```
-
-
-```{r mapa, echo=FALSE, warning=FALSE}
-### DATA PROCESSING: COVID-19 ###
-# extract time stamp from cv_cases
-update = tail(cv_cases$last_update,1) 
-
-# check consistency of country names across datasets
-if (all(unique(cv_cases$country) %in% unique(countries$country))==FALSE) { print("Error: inconsistent country names")}
-
-# extract dates from cv data
-if (any(grepl("/", cv_cases$date))) { 
-  cv_cases$date = format(as.Date(cv_cases$date, format="%d/%m/%Y"),"%Y-%m-%d") 
-} else { cv_cases$date = as.Date(cv_cases$date, format="%Y-%m-%d") }
-cv_cases$date = as.Date(cv_cases$date)
-cv_min_date = as.Date(min(cv_cases$date),"%Y-%m-%d")
-current_date = as.Date(max(cv_cases$date),"%Y-%m-%d")
-cv_max_date_clean = format(as.POSIXct(current_date),"%d %B %Y")
-
-# merge cv data with country data and extract key summary variables
-cv_cases = merge(cv_cases, countries, by = "country")
-cv_cases = cv_cases[order(cv_cases$date),]
-cv_cases$per100k = as.numeric(format(round(cv_cases$cases/(cv_cases$population/100000),1),nsmall=1))
-cv_cases$newper100k = as.numeric(format(round(cv_cases$new_cases/(cv_cases$population/100000),1),nsmall=1))
-cv_cases$activeper100k = as.numeric(format(round(cv_cases$active_cases/(cv_cases$population/100000),1),nsmall=1))
-cv_cases$million_pop = as.numeric(cv_cases$population>1e6)
-
-# add variable for days since 100th case and 10th death
-cv_cases$days_since_case100 = cv_cases$days_since_death10 = 0
-for (i in 1:length(unique(cv_cases$country))) {
-  country_name = as.character(unique(cv_cases$country))[i]
-  country_db = subset(cv_cases, country==country_name)
-  country_db$days_since_case100[country_db$cases>=100] = 1:sum(country_db$cases>=100)
-  country_db$days_since_death10[country_db$deaths>=10] = 1:sum(country_db$deaths>=10)
-  cv_cases$days_since_case100[cv_cases$country==country_name] = country_db$days_since_case100
-  cv_cases$days_since_death10[cv_cases$country==country_name] = country_db$days_since_death10
-}
-
-# creat variable for today's data
-cv_today = subset(cv_cases, date==current_date) 
-current_case_count = sum(cv_today$cases)
-current_case_count_China = sum(cv_today$cases[cv_today$country=="Mainland China"])
-current_case_count_other = sum(cv_today$cases[cv_today$country!="Mainland China"])
-current_death_count = sum(cv_today$deaths)
-
-# create subset for countries with at least 100 cases
-cv_today_100 = subset(cv_today, cases>=100)
-
-# write current day's data
-write.csv(cv_today %>% select(c(country, date, update, cases, new_cases, deaths, new_deaths,
-                                recovered, new_recovered, active_cases, 
-                                per100k, newper100k, activeper100k,
-                                days_since_case100, days_since_death10)), "data/coronavirus_today.csv")
-
-# aggregate at continent level
-cv_cases_continent = subset(cv_cases, !is.na(continent_level)) %>% select(c(cases, new_cases, deaths, new_deaths, date, continent_level)) %>% group_by(continent_level, date) %>% summarise_each(funs(sum)) %>% data.frame()
-
-# add variable for days since 100th case and 10th death
-cv_cases_continent$days_since_case100 = cv_cases_continent$days_since_death10 = 0
-cv_cases_continent$continent = cv_cases_continent$continent_level
-for (i in 1:length(unique(cv_cases_continent$continent))) {
-  continent_name = as.character(unique(cv_cases_continent$continent))[i]
-  continent_db = subset(cv_cases_continent, continent==continent_name)
-  continent_db$days_since_case100[continent_db$cases>=100] = 1:sum(continent_db$cases>=100)
-  continent_db$days_since_death10[continent_db$deaths>=10] = 1:sum(continent_db$deaths>=10)
-  cv_cases_continent$days_since_case100[cv_cases_continent$continent==continent_name] = continent_db$days_since_case100
-  cv_cases_continent$days_since_death10[cv_cases_continent$continent==continent_name] = continent_db$days_since_death10
-}
-write.csv(cv_cases_continent, "data/coronavirus_continent.csv")
-
-# aggregate at global level
-cv_cases_global = cv_cases %>% select(c(cases, new_cases, deaths, new_deaths, date, global_level)) %>% group_by(global_level, date) %>% summarise_each(funs(sum)) %>% data.frame()
-cv_cases_global$days_since_case100 = cv_cases_global$days_since_death10 = 1:nrow(cv_cases_global)
-write.csv(cv_cases_global, "data/coronavirus_global.csv")
-
-# select large countries for mapping polygons
-cv_large_countries = cv_today %>% filter(alpha3 %in% worldcountry$id)
-if (all(cv_large_countries$alpha3 %in% worldcountry$id)==FALSE) { print("Error: inconsistent country names")}
-cv_large_countries = cv_large_countries[order(cv_large_countries$alpha3),]
-
-# create plotting parameters for map
-bins = c(0,1,10,50,100,500, 1000)
-cv_pal <- colorBin("Reds", domain = cv_large_countries$per100k, bins = bins)
-plot_map <- worldcountry[worldcountry$id %in% cv_large_countries$alpha3, ]
-
-# create cv base map 
-basemap = leaflet(plot_map) %>% 
-  addTiles() %>% 
-  addLayersControl(
-    position = "bottomright",
-    overlayGroups = c("2019-COVID (ativos)", "2019-COVID (novos)", 
-                      "2019-COVID (cumulativo)"),
-    options = layersControlOptions(collapsed = FALSE)) %>% 
-  hideGroup(c("2019-COVID (novos)", "2019-COVID (cumulativo)"))  %>%
-  addProviderTiles(providers$CartoDB.Positron) %>%
-  fitBounds(~-100,-50,~80,80) %>%
-  addLegend("bottomright", pal = cv_pal, values = ~cv_large_countries$per100k,
-            title = "<small>Casos ativos por 100,000</small>") %>%
-  fitBounds(-70,-25,90,65) 
-
-# sum cv case counts by date
-cv_aggregated = aggregate(cv_cases$cases, by=list(Category=cv_cases$date), FUN=sum)
-names(cv_aggregated) = c("date", "cases")
-
-# add variable for new cases in last 24 hours
-for (i in 1:nrow(cv_aggregated)) { 
-  if (i==1) { cv_aggregated$new[i] = 0 }
-  if (i>1) { cv_aggregated$new[i] = cv_aggregated$cases[i] - cv_aggregated$cases[i-1] }
-}
-
-# add plotting region
-cv_aggregated$region = "Global"
-cv_aggregated$date = as.Date(cv_aggregated$date,"%Y-%m-%d")
-
-# assign colours to countries to ensure consistency between plots 
-cls = rep(c(brewer.pal(8,"Dark2"), brewer.pal(10, "Paired"), brewer.pal(12, "Set3"), brewer.pal(8,"Set2"), brewer.pal(9, "Set1"), brewer.pal(8, "Accent"),  brewer.pal(9, "Pastel1"),  brewer.pal(8, "Pastel2")),3)
-cls_names = c(as.character(unique(cv_cases$country)), as.character(unique(cv_cases_continent$continent)),"Global")
-country_cols = cls[1:length(cls_names)]
-names(country_cols) = cls_names
-```
-
-```{r rótulo, include=FALSE}
-head(cv_cases)
-
-
-pais <- paste('País:', cv_cases$country)
-total <- paste('Confirmados', cv_cases$cases)
-novos <- paste('Novos casos', Sys.Date(), ':', cv_cases$new_cases)
-taxa <- paste('Casos/100k habitantes:', cv_cases$per100k)
-rec <- paste('Recuperados:', cv_cases$recovered)
-mort <- paste('Mortos', cv_cases$deaths)
-
-carai <- paste(pais, '<br/>',
-               total, '<br/>',
-               taxa, '<br/>', 
-               rec, '<br/>',
-               mort, sep = '') %>%
+carai <- paste(cidade, '<br/>',
+               confirmados, '<br/>',
+               mortos, '<br/>',
+               taxa_100k, '<br/>',
+               mortalidade, '<br/>', 
+               atualizado, sep = '') %>%
   lapply(HTML)
+summary(bd$confirmed_per_100k_inhabitants)
+
+mybins <- c(seq(0, 30, 6), seq(50, 1000, 250))
+
+# criando paleta de cores
+palette <- colorNumeric(palette="Reds", domain = NULL, na.color="transparent")
+
+palette2 <- colorBin(palette="Reds", bd$confirmed_per_100k_inhabitants,  mybins, pretty = F)
+
+#shape <- readOGR('../../../../borba/OneDrive/Área de Trabalho/data/shapefiles/br/BRMUE250GC_SIR.shp',
+ #                GDAL1_integer64_policy = T)
+```
+
+O total de casos registrados no Brasil até o dia `r format(Sys.Date(), '%d/%m/%Y')` é de `r sum(bd$confirmed)`. Podemos observar no mapa abaixo algumas estatísticas sobre a Covid-19 nos municípios brasileiros. Os dados são atualizados diariamente, dependendo das secretarias estaduais de saúde, tendo em vista que os dados são produzidos a nível municipal. 
+
+```{r map, echo=FALSE, fig.align=TRUE, warning=FALSE}
+
+m <- bd %>%
+  leaflet() %>% 
+  addTiles() %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  clearMarkers() %>%
+      clearShapes() %>%
+  #addPolygons(data = shape,
+   #           weight = 0, smoothFactor = 0.5, opacity = .5, 
+    #          fillOpacity = 0.5, label = carai,
+    #fillColor = ~palette(bd$confirmed),
+    #highlightOptions = highlightOptions(color = "white", weight = 1, 
+     #                                   bringToFront = TRUE),
+    #labelOptions = labelOptions(style = list("font-weight" = "normal", 
+     #                                        padding = "3px 8px"), 
+      #                          textsize = "13px", direction = "auto")) 
+  addCircleMarkers(lng = ~LONGITUDE, lat = ~LATITUDE,
+                   radius = ~sqrt(bd$confirmed_per_100k_inhabitants), stroke = FALSE, fillOpacity = 0.5,
+                   label = carai, color = ~palette2(bd$confirmed_per_100k_inhabitants),
+                   labelOptions = labelOptions(style = list("font-weight" = "normal", 
+                                                            padding = "3px 8px"), 
+                                               textsize = "13px", 
+                                               direction = "auto")) %>%
+   addLegend(pal = palette2, values = ~confirmed, opacity=0.9, 
+             title = "Confirmados/100 mil habitantes", position = "bottomright" )
+
+
+m
+
+```
+
+```{r data, include=FALSE}
+
+# filtering states data
+states <- brazil %>% 
+  filter(place_type == 'state') %>%
+  select(-starts_with('city'))# %>%
+  #group_by(state) %>%
+  #summarize('confirmed' = sum(confirmed, na.rm = T),
+   #         'deaths' = sum(deaths, na.rm = T),
+    #        'death_rate' = sum(death_rate, na.rm = T))
 
 ```
 
 
-```{r mapa mundo, echo=FALSE, warning=FALSE, layout="l-screen-inset"}
-mybins <- c(0, 1, 10, 50, 100, 500, 1000)
+Na tabela abaixo vemos a distribuição de algumas variáveis por UF no Brasil. Verificamos que São Paulo é o estado com maior número de infectados (`r states %>% filter(place_type == 'state' & is_last == T & state == 'SP') %>% select(confirmed) %>% sum()`), seguido pelo Rio de Janeiro (`r states %>% filter(place_type == 'state' & is_last == T & state == 'RJ') %>% select(confirmed) %>% sum()`) e Ceará (`r states %>% filter(place_type == 'state' & is_last == T & state == 'CE') %>% select(confirmed) %>% sum()`). Já no que se refere ao número de mortes, os primeiros colocados são São Paulo, Rio de Janeiro e Recife, com `r print(states$confirmed[states$state == 'SP' & states$is_last == T])`, `r print(states$confirmed[states$state == 'RJ' & states$is_last == T])` e `r print(states$confirmed[states$state == 'SP' & states$is_last == T])`. 
 
-palette2 <- colorBin(palette="Reds", cv_cases$per100k, mybins, pretty = F)
-
-palette3 <- colorBin(palette="Greys", cv_cases$per100k, mybins, pretty = F)
-
-m2 <- cv_cases %>%
-      leaflet() %>% 
-      addTiles() %>% 
-      #addLayersControl(
-      #position = "bottomright",
-      #overlayGroups = c("Total", "Novos casos", 
-      #                "Mortes"),
-      #options = layersControlOptions(collapsed = FALSE)) %>% 
-      #hideGroup(c("Novos casos", "Mortes"))  %>%
-      addProviderTiles(providers$CartoDB.Positron) %>%
-      addLegend("bottomright", pal = palette2, values = ~per100k,
-            title = "<small>Confirmados por 100 mil habitantes</small>") %>%
-      fitBounds(-70,-25,90,65)  %>% 
-      clearMarkers() %>%
-      clearShapes() %>% 
-      addCircleMarkers(lat = ~ latitude, lng = ~ longitude, weight = 1, radius = ~(cases)^(1/5),
-                 fillOpacity = 0.9, color = ~ palette2(per100k), group = 'Total',
-                 label = carai,
-                 labelOptions = labelOptions(
-                   style = list("font-weight" = "normal", padding = "3px 8px", "color" = covid_col),
-                   textsize = "15px", direction = "auto"))# %>%
-      #addCircleMarkers(lat = ~ latitude, lng = ~ longitude, weight = 1, radius = ~(new_cases)^(1/5), 
-       #          fillOpacity = 0.5, color = ~ palette2(per100k), group = "Novos casos",
-        #         label = carai,
-         #        labelOptions = labelOptions(
-          #         style = list("font-weight" = "normal", padding = "3px 8px", "color" = covid_col),
-           #        textsize = "15px", direction = "auto")) %>%
-      #addCircleMarkers(lat = ~ latitude, lng = ~ longitude, weight = 1, radius = ~(deaths)^(1/5), 
-       #          fillOpacity = 0.1, color = ~ palette3(per100k), group = "Mortes",
-        #         label = carai,
-         #        labelOptions = labelOptions(style = list("font-weight" = "normal", 
-          #                                                  padding = "3px 8px"), 
-           #                                    textsize = "13px", 
-            #                                   direction = "auto"))
-
-m2
+```{r table, echo=FALSE}
+states[order(states$state),] %>%
+  filter(place_type == 'state' & is_last == T) %>%
+  select(state, confirmed, deaths, death_rate) %>%
+  #group_by(state) %>%
+  #summarize('Estado' = sum(deaths, na.rm = T),
+   #         'Confirmados', sum(confirmed, na.rm = T),
+    #        'Taxa de mortalidade' = sum(death_rate, na.rm = T)) %>%
+  dplyr::transmute('Estado' = state,
+                   'Casos confirmados' = confirmed,
+                   'Mortes' = deaths,
+                   'Taxa de mortalidade' = death_rate) %>%
+  kable() %>%
+  kable_styling() %>%
+  footnote(general = paste('Dados atualizados em:', format(Sys.Date(), '%d/%m/%Y'), 'às', str_sub(Sys.time(), -9)))
 ```
+
+Se analisarmos os estados com maior taxa de mortalidade (Mortos/Infectados), verificamos que Paraíba, Piauí e Pernambuco são os estados com as maiores taxas de mortalidade no Brasil.
+
+```{r tab-2, echo=FALSE}
+states[order(desc(states$death_rate)),] %>% filter(place_type == 'state' & is_last == T) %>% dplyr::select(state, death_rate) %>% head(3) %>%
+  dplyr::transmute('Estado' = state,
+                   'Taxa de Mortalidade' = death_rate) %>%
+  kable() %>%
+  kable_styling(full_width = F) %>%
+   footnote(general = paste('Dados atualizados em:', format(Sys.Date(), '%d/%m/%Y'), 'às', str_sub(Sys.time(), -9)))
+```
+
+
+Podemos ver nos gráficos abaixo o acumulado de casos por estado ao longo do tempo. 
+
+```{r plots, echo=FALSE}
+knitr::include_app('https://lucasbmiranda.shinyapps.io/ts_brstates/', height = 6)
+#for (i in seq_along(states$state)) {
+#  plot <- ggplot(subset(states, states$state == states_list[i]),
+#                 aes(date, confirmed, group = state)) +
+#    geom_line()
+#  print(plot)
+#}
+
+
+#inputPanel(
+#
+#  selectInput('breaks2', label = 'Estados:',
+#  choices = distinct(states, state)),
+#  
+#  #checkboxGroupInput('breaks2', label = 'Estados:', 
+#   #                  choices = unique(states$state), 
+#    #                 selected = unique(states$state)[1]),
+#  
+#  checkboxInput('log_date', label = 'Escala logarítmica', FALSE)
+  
+#)
+
+#renderPlotly({
+ 
+   
+#    l1 <- ggplot(states %>% filter(state == input$breaks2), 
+#       aes(x = date, y = confirmed)) +
+#  geom_line() +
+#  labs(title = paste("Total de casos", input$breaks2),
+#       x = "", 
+#       y = "Confirmados")+
+  #guides(color=guide_legend(title="Países"))+
+#  theme_minimal()+
+#  theme(plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
+#        plot.subtitle = element_text(face = "italic", size = 12, hjust = 0.5)) +
+#      scale_x_date(date_breaks = '1 week')
+  
+#  if (input$log_date)
+    
+     
+   
+#    l1 <- ggplot(states %>% filter(state == input$breaks2), 
+#       aes(x = date, y = log(confirmed))) +
+#  geom_line() +
+#  labs(title = paste("Total de casos", input$breaks2),
+#       x = "", 
+#       y = "Confirmados (log)")+
+  #guides(color=guide_legend(title="Países"))+
+#  theme_minimal()+
+#  theme(plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
+#        plot.subtitle = element_text(face = "italic", size = 12, hjust = 0.5)) +
+#      scale_x_date(date_breaks = '1 week')
+  
+#  return(l1)
+
+#})
+```
+
+
+
