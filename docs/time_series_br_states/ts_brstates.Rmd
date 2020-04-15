@@ -1,0 +1,80 @@
+---
+title: ''
+output: html_document
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages, include=FALSE}
+library(tidyverse)
+library(shiny)
+library(plotly)
+```
+
+
+```{r data, include=FALSE}
+brazil <- as.data.frame(data.table::fread('https://www.brasil.io/dataset/covid19/caso?format=csv'))
+
+# adjusting variables
+brazil$is_last <- as.logical(brazil$is_last)
+brazil$date <- as.Date(brazil$date)
+
+# filtering states data
+states <- brazil %>% 
+  filter(place_type == 'state') %>%
+  select(-starts_with('city'))
+```
+
+```{r ts-states, echo=FALSE}
+inputPanel(
+
+  selectInput('breaks2', label = 'Estados:',
+  choices = distinct(states, state)),
+  
+  #checkboxGroupInput('breaks2', label = 'Estados:', 
+   #                  choices = unique(states$state), 
+    #                 selected = unique(states$state)[1]),
+  
+  checkboxInput('log_date', label = 'Escala logarítmica', FALSE)
+  
+)
+
+renderPlotly({
+ 
+   
+    l1 <- ggplot(states %>% filter(state == input$breaks2), 
+       aes(x = date, y = confirmed)) +
+  geom_line() +
+  labs(title = paste("Total de casos", input$breaks2),
+       x = "", 
+       y = "Confirmados")+
+  #guides(color=guide_legend(title="Países"))+
+  theme_minimal()+
+  theme(plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
+        plot.subtitle = element_text(face = "italic", size = 12, hjust = 0.5)) +
+      scale_x_date(date_breaks = '1 week')
+  
+  if (input$log_date)
+    
+     
+   
+    l1 <- ggplot(states %>% filter(state == input$breaks2), 
+       aes(x = date, y = log(confirmed))) +
+  geom_line() +
+  labs(title = paste("Total de casos", input$breaks2),
+       x = "", 
+       y = "Confirmados (log)")+
+  #guides(color=guide_legend(title="Países"))+
+  theme_minimal()+
+  theme(plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
+        plot.subtitle = element_text(face = "italic", size = 12, hjust = 0.5)) +
+      scale_x_date(date_breaks = '1 week')
+  
+  return(l1)
+
+})
+```
+
