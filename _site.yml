@@ -14,5 +14,5 @@ navbar:
 output:
   html_document:
    theme: cosmo
-   fig_width: 12
-   fig_height: 8.5
+   fig_width: 10
+   fig_height: 6.5
