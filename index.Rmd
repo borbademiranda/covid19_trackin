@@ -96,12 +96,14 @@ palette2 <- colorBin(palette="Reds", bd$confirmed_per_100k_inhabitants,  mybins,
 
 #shape <- readOGR('../../../../borba/OneDrive/Área de Trabalho/data/shapefiles/br/BRMUE250GC_SIR.shp',
  #                GDAL1_integer64_policy = T)
+
+br_last <- cv_cases$cases[cv_cases$country == 'Brazil']
+
 ```
 
-O total de casos registrados no Brasil até o dia `r format(Sys.Date(), '%d/%m/%Y')` é de `r sum(bd$confirmed)`. Podemos observar no mapa abaixo algumas estatísticas sobre a Covid-19 nos municípios brasileiros. Os dados são atualizados diariamente, dependendo das secretarias estaduais de saúde, tendo em vista que os dados são produzidos a nível municipal. 
+O total de casos registrados no Brasil até o dia `r format(Sys.Date(), '%d/%m/%Y')` é de `r tail(br_last, 1)`. Podemos observar no mapa abaixo algumas estatísticas sobre a Covid-19 nos municípios brasileiros. Os dados são atualizados diariamente, dependendo das secretarias estaduais de saúde, tendo em vista que os dados são produzidos a nível municipal. 
 
 ```{r map, echo=FALSE, fig.align='center', warning=FALSE}
-
 
 m <- bd %>%
   leaflet(width = '100%') %>% 
@@ -181,7 +183,7 @@ states[order(desc(states$death_rate)),] %>% filter(place_type == 'state' & is_la
 Podemos ver nos gráficos abaixo o acumulado de casos por estado ao longo do tempo. 
 
 ```{r plots, echo=FALSE, fig.align='center'}
-knitr::include_app('https://lucasbmiranda.shinyapps.io/ts_brstates/')
+knitr::include_app('https://lucasbmiranda.shinyapps.io/ts_brstates/', height = '550px')
 
 #for (i in seq_along(states$state)) {
 #  plot <- ggplot(subset(states, states$state == states_list[i]),

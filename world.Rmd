@@ -201,7 +201,7 @@ palette2 <- colorBin(palette="Reds", cv_cases$per100k, mybins, pretty = F)
 palette3 <- colorBin(palette="Greys", cv_cases$per100k, mybins, pretty = F)
 
 m2 <- cv_cases %>%
-      leaflet(width = '100%', height = 780) %>% 
+      leaflet(width = '100%') %>% 
       addTiles() %>% 
       #addLayersControl(
       #position = "bottomright",
