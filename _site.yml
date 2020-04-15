@@ -3,16 +3,15 @@ output_dir: 'docs'
 navbar:
   title: "Covid-19 no Brasil"
   left:
-  - text: "Mundo"
-    href: index.html
   - text: 'Brasil'
-    href: report.html
-  - text: 'Análise de Sentimentos'
+    href: index.html
+  - text: 'Coronavírus no Twitter'
     href: sentiment.html
+  - text: "Mundo"
+    href: world.html
   - text: 'Sobre mim'
     href: about.html
 output:
   html_document:
    theme: cosmo
-   fig_width: 10
-   fig_height: 6.5
+   
