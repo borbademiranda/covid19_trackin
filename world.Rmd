@@ -2,6 +2,17 @@
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 ---
 
+<style type="text/css">
+.main-container {
+  max-width: 1800px;
+  margin-left: auto;
+  margin-right: auto;
+  max-height: 100%;
+  margin-up: auto;
+  margin-down: auto;
+}
+</style>
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -41,71 +52,6 @@ worldcountry = geojson_read("data/countries.geo.json", what = "sp")
 country_geoms = read.csv("data/country_geoms.csv")
 
 ```
-
-```{r functions, include=FALSE, warning=FALSE}
-# function to plot cumulative COVID cases by date
-cumulative_plot = function(cv_aggregated, plot_date) {
-  plot_df = subset(cv_aggregated, date<=plot_date)
-  g1 = ggplot(plot_df, aes(x = date, y = cases, color = region)) + geom_line() + geom_point(size = 1, alpha = 0.8) +
-    ylab("Total de casos") + theme_bw() + 
-    scale_colour_manual(values=c(covid_col)) +
-    scale_y_continuous(labels = function(l) {trans = l / 1000; paste0(trans, "K")}) +
-    theme(legend.title = element_blank(), legend.position = "", plot.title = element_text(size=10), 
-          plot.margin = margin(5, 12, 5, 5))
-  g1
-}
-
-# function to plot new COVID cases by date
-new_cases_plot = function(cv_aggregated, plot_date) {
-  plot_df_new = subset(cv_aggregated, date<=plot_date)
-  g1 = ggplot(plot_df_new, aes(x = date, y = new, fill = region)) + 
-    geom_bar(position="stack", stat="identity") + 
-    ylab("Novos casos") + theme_bw() + 
-    scale_fill_manual(values=c(covid_col)) +
-    scale_y_continuous(labels = function(l) {trans = l / 1000; paste0(trans, "K")}) +
-    theme(legend.title = element_blank(), legend.position = "", plot.title = element_text(size=10), 
-          plot.margin = margin(5, 12, 5, 5))
-  g1
-}
-
-# function to render plotly of epidemic comparison depending on selected outcome
-comparison_plot = function(epi_comp, comparison) {
-  epi_comp$outcome = epi_comp[,comparison] 
-  epi_comp = epi_comp[order(epi_comp$outcome),]
-  epi_comp$outbreak = factor(epi_comp$outbreak, levels=epi_comp$outbreak)
-  
-  p1 <- ggplot(epi_comp, aes(x = outbreak, y = outcome, fill=outbreak, text = paste0(outbreak, ": ",outcome))) + geom_bar(alpha = 0.8, stat="identity") +
-    ylab("N") + xlab("") + theme_bw() + 
-    scale_fill_manual(values=c("2019-COVID"=covid_col)) +
-    theme(legend.position = "")
-  
-  if(comparison == "cfr") { p1 = p1 + ylab("%") }
-  if(comparison == "deaths") { p1 = p1 + scale_y_continuous(labels = function(l) {trans = l / 1000; paste0(trans, "K")}) }
-  if(comparison == "cases") { p1 = p1 + scale_y_continuous(trans='log10', limits = c(1,1e8), breaks=c(1,1000,1e6,1e9), labels = function(l) {trans = l / 1000; paste0(trans, "K")}) }
-  ggplotly(p1 + coord_flip(), tooltip = c("text")) %>% layout(showlegend = FALSE)
-}
-
-names(cv_aggregated)
-
-# new cases by cumulative cases log
-new_cumulative_plot = function(cv_aggregated, plot_date) {
-  plot_df = subset(cv_aggregated, date <= plot_date)
-  g1 = ggplot(plot_df, aes(x = cases, y = new, color = region)) + 
-    geom_line() + geom_point(size = 1, alpha = 0.8) +
-    labs(y = "Novos casos (log)", x = 'Total de casos (log)') + 
-    theme_bw() + 
-    scale_colour_manual(values=c(covid_col)) +
-    scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
-                labels = trans_format("log10", math_format(10^.x))) +
-  scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x),
-                labels = trans_format("log10", math_format(10^.x))) +
-    theme(legend.title = element_blank(), legend.position = "", plot.title = element_text(size=10), 
-          plot.margin = margin(5, 12, 5, 5))
-  g1
-}
-
-```
-
 
 ```{r mapa, echo=FALSE, warning=FALSE}
 ### DATA PROCESSING: COVID-19 ###
@@ -255,7 +201,7 @@ palette2 <- colorBin(palette="Reds", cv_cases$per100k, mybins, pretty = F)
 palette3 <- colorBin(palette="Greys", cv_cases$per100k, mybins, pretty = F)
 
 m2 <- cv_cases %>%
-      leaflet() %>% 
+      leaflet(width = '100%', height = 780) %>% 
       addTiles() %>% 
       #addLayersControl(
       #position = "bottomright",

@@ -139,11 +139,14 @@ new <- search_tweets('bolsonaro OR presidente',
   rbind(search_tweets('mandetta OR "ministro da saúde"', 
                 include_rts = F, n = 10000000, retryonratelimit = T, 
                 lang = 'pt', since = str_sub(summary(tw$created_at)[[6]], 
-                                             end = -10)),
+                                             end = -10)) %>%
         mutate(subject = 'Mandetta'))
 
+save(new, './data/new_tw.RData')
+system('shutdown -s')
+
 # getting sentiments
-new <- cbind(new, get_nrc_sentiment(new$text, language = 'portuguese'))
+new <- cbind(new[columns], get_nrc_sentiment(new$text, language = 'portuguese'))
   
 # binding with data.frame
 tw <- rbind(tw, new)
