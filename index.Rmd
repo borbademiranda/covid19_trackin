@@ -38,6 +38,10 @@ download.file("https://data.brasil.io/dataset/covid19/caso.csv.gz", temp)
 
 brazil <- as.data.frame(data.table::fread('https://www.brasil.io/dataset/covid19/caso?format=csv'))
 
+cv_cases = read.csv("data/coronavirus.csv")
+
+cv_cases$date <- cv_cases$date %>% as.Date()
+
 # importando
 #brazil <- read.csv('https://data.brasil.io/dataset/covid19/caso.csv.gz',
  #                  sep = ",", header = T, stringsAsFactors = F, encoding = 'UTF-8')
@@ -48,6 +52,8 @@ table(brazil$is_last)
 brazil$is_last <- as.logical(brazil$is_last)
 brazil$date <- as.Date(brazil$date)
 brazil$date_2 <- as.Date(brazil$date) %>% format('%d/%m/%Y')
+
+date <- Sys.Date()
 
 ```
 
@@ -95,6 +101,7 @@ palette2 <- colorBin(palette="Reds", bd$confirmed_per_100k_inhabitants,  mybins,
 O total de casos registrados no Brasil até o dia `r format(Sys.Date(), '%d/%m/%Y')` é de `r sum(bd$confirmed)`. Podemos observar no mapa abaixo algumas estatísticas sobre a Covid-19 nos municípios brasileiros. Os dados são atualizados diariamente, dependendo das secretarias estaduais de saúde, tendo em vista que os dados são produzidos a nível municipal. 
 
 ```{r map, echo=FALSE, fig.align='center', warning=FALSE}
+
 
 m <- bd %>%
   leaflet(width = '100%') %>% 
