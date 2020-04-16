@@ -5,6 +5,8 @@ navbar:
   left:
   - text: 'Brasil'
     href: index.html
+  - text: 'Previsões'
+    href: prev.html
   - text: 'Coronavírus no Twitter'
     href: sentiment.html
   - text: "Mundo"
