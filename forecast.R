@@ -8,9 +8,9 @@ library(xts)
 owid <- as.data.frame(data.table::fread("http://covid.ourworldindata.org/data/ecdc/total_cases.csv"))
 
 # deaths
-owid_deaths <- as.data.frame(data.table::fread('https://covid.ourworldindata.org/data/ecdc/total_deaths.csv'))
+owid_deaths <- as.data.frame(data.table::fread('http://covid.ourworldindata.org/data/ecdc/total_deaths.csv'))
 
-str(owid)
+head(owid)
 
 # as date
 owid$date <- as.Date(owid$date)
