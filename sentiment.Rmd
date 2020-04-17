@@ -1,5 +1,5 @@
 ---
-title: "Análise de sentimentos do Twitter"
+title: "Coronavírus no Twitter"
 author: "Lucas B Miranda"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 ---
@@ -21,6 +21,8 @@ library(lubridate)
 library(scales)
 library(ggpubr)
 library(radarchart)
+library(reshape2)
+library(plotly)
 
 options(scipen = 999)
 ```
@@ -28,9 +30,9 @@ options(scipen = 999)
 # Introdução
 ```{r dados, include=FALSE}
 # twitter
-load(file = './data/twitter2.RData')
+load(file = './data/twitter_1604.RData')
 
-length(unique(tw$status_id))
+length(unique(tw$status_id, tw$subject))
 
 # salvando summary da data dos tweets
 tw_create <- summary(tw$created_at)
@@ -39,7 +41,7 @@ tw_create <- summary(tw$created_at)
 #dict <- read.csv('./data/sentimentos/dictionary_pt.csv')
 ```
 
-Como o brasileiro reage às respostas dos atores políticos à COVID-19? Compreendemos que, a nível nacional, os principais responsáveis pelo combate à pandemia são o chefe do Executivo e o Ministro da Saúde, este último por ser o responsável pela pasta que lida diretamente com o problema. Para acessarmos a opinião dos indivíduos sobre as medidas que vêm sendo tomadas até então para miminizar os danos causados pelo coronavírus no Brasil, realizamos uma análise de sentimentos de postagens de brasileiros no Twitter. Esta abordagem tem como objetivo mensurar sentimentos e emoções contidas no texto que compõe os *tweets* com o auxílio de dicionários específicos que classificam palavras e expressões de acordo com a principal emoção a qual está ligada. Assim, podemos ter uma ideia de quais sentimentos (alegria, tristeza, medo, ansiedade, etc.) estão ligados à figura do presidente Jair Bolsonaro e do ministro da saúde, Luiz Henrique Mandetta. Nossos dados são compostos por `r nrow(tw)` *tweets* baixados no período entre `r tw_create[[1]]` a `r tw_create[[6]]`. Apesar de não ser uma amostra representativa da população brasileira, tendo em vista que o Brasil possui apenas 70% de sua população com acesso à internet^[Disponível em: https://g1.globo.com/economia/tecnologia/noticia/2019/08/28/uso-da-internet-no-brasil-cresce-e-70percent-da-populacao-esta-conectada.ghtml] e apenas 8,28 milhões de usuários no Twitter^[Disponível em: https://www.tecmundo.com.br/redes-sociais/144654-brasil-10-paises-usuarios-twitter.htm], podemos ter uma ideia de como se comporta uma parte da população brasileira em relação aos principais atores políticos que estão - ou deveriam estar - combatendo a pandemia. 
+O que o brasileiro fala sobre as principais figuras políticas no combate à Covid-19? A nível nacional, os principais responsáveis pelo combate à pandemia são o chefe do Executivo e o Ministro da Saúde, este último por ser o responsável pela pasta que lida diretamente com o problema. Para acessarmos a opinião dos indivíduos sobre as medidas que vêm sendo tomadas até então para miminizar os danos causados pelo coronavírus no Brasil, realizamos uma análise de sentimentos de postagens de brasileiros no Twitter. Esta abordagem tem como objetivo mensurar sentimentos e emoções contidas no texto que compõe os *tweets* com o auxílio de dicionários específicos que classificam palavras e expressões de acordo com a principal emoção a qual está ligada. Assim, podemos ter uma ideia de quais sentimentos (alegria, tristeza, medo, ansiedade, etc.) estão ligados à figura do presidente Jair Bolsonaro e do então ministro da saúde, Luiz Henrique Mandetta, que exerceu o cargo até 16/04/2020. Os dados utilizados são compostos por `r nrow(tw)` *tweets* baixados no período entre `r tw_create[[1]]` a `r tw_create[[6]]`. Apesar de não ser uma amostra representativa da população brasileira, tendo em vista que o Brasil possui apenas 70% de sua população com acesso à internet^[Disponível em: https://g1.globo.com/economia/tecnologia/noticia/2019/08/28/uso-da-internet-no-brasil-cresce-e-70percent-da-populacao-esta-conectada.ghtml] e apenas 8,28 milhões de usuários no Twitter^[Disponível em: https://www.tecmundo.com.br/redes-sociais/144654-brasil-10-paises-usuarios-twitter.htm], podemos ter uma ideia de como se comporta uma parte da população brasileira em relação aos principais atores políticos que estão - ou deveriam estar - combatendo a pandemia. 
 
 # Metodologia
 
@@ -70,12 +72,19 @@ top3 <- topfeatures(dfm1, 10)
 textplot_wordcloud(dfm1, rotation = .25, 
                    color = RColorBrewer::brewer.pal(8, "Dark2"))
 
-
 ```
 
-Quando olhamos para as *hashtags* mais frequentes nos tweets, podemos observar uma divisão entre as *tags* a favor de Bolsonaro e de Mandetta. A figura abaixo mostra um diagrama de co-ocorrência entre as 50 *hashtags* mais frequentes no conjunto de postagens. Observamos do lado direito hashtags que apóiam as ações do ministro da saúde, que são contrárias ao posicionamento do presidente no que se refere ao combate à epidemia, e também palavras que remetem à pandemia propriamente dita. No centro desta nuvem à esquerda, observamos *hashtags* como #bolsonaroacabou, #ficamandetta e #fiqueemcasa. Essas palavras ocorrem com maior frequência em conjunto a outras *tags* como #meupresidenteémandetta, #bolsonarogenocida e #impeachmentbolsonaro. Já do lado esquerdo vemos *hashtags* favoráveis ao presidente, como #foramandetta, #viruschines e #bolsonarotemrazao. Essa tags interagem com maior frequência com outras tags, como #globolixo, #bolsonaro2022 e #naopercamaistempo. Podemos também observar que os dois grupos de *hashtags* interagem minimamente, uma vez que praticamente não existe ligação entre as *tags* do lado esquerdo com as do lado direito da figura.
+Podemos verificar também uma nuvem de palavras utilizando a medida tf-idf, que pondera a frequência total de uma detarminada palavra pela frequência inversa dos documentos, associando assim maiores pesos a palavras não tão utilizadas no conjunto total de documentos, e pesos menores a palavras comuns a todos os documentos.
 
-```{r tags, echo=FALSE, warning=FALSE, message=FALSE}
+```{r cloud-tfidf, echo=FALSE, warning=FALSE, fig.align='center'}
+textplot_wordcloud(dfm_tfidf(dfm1), rotation = .25, 
+                   color = RColorBrewer::brewer.pal(8, "Dark2"), max_words = 250)
+```
+
+
+Quando olhamos para as *hashtags* mais frequentes nos tweets, podemos observar uma divisão entre as *tags* a favor de Bolsonaro e de Mandetta. A figura abaixo mostra um diagrama de co-ocorrência entre as 50 *hashtags* mais frequentes no conjunto de postagens. Observamos do lado direito hashtags que apóiam as ações do ministro da saúde, que são contrárias ao posicionamento do presidente no que se refere ao combate à epidemia, e também palavras que remetem à pandemia propriamente dita. No centro desta nuvem à direita, observamos *hashtags* como #bolsonaroacabou, #ficamandetta e #forabolsonaro. Essas palavras ocorrem com maior frequência em conjunto a outras *tags* como #meupresidenteémandetta, #bolsonarogenocida e #impeachmentbolsonaro. Já do lado esquerdo vemos *hashtags* favoráveis ao presidente, como #foramandetta, #viruschines e #bolsonarotemrazao. Essa tags interagem com maior frequência com outras tags, como #globolixo, #bolsonaro2022 e #naopercamaistempo. Podemos também observar que os dois grupos de *hashtags* interagem minimamente, uma vez que praticamente não existe ligação entre as *tags* do lado esquerdo com as do lado direito da figura.
+
+```{r tags, echo=FALSE, warning=FALSE, message=FALSE, fig.width=8, fig.height=5, fig.align='center'}
 # dfm
 dfm2 <- dfm(corp, remove_punct = T)
 
@@ -98,10 +107,10 @@ set.seed(100); textplot_network(tag_fcm, min_freq = .3, edge_alpha = .3, edge_si
 
 Já o gráfico de barras abaixo ilustra a proporção de palavras contidas nos tweets de acordo com cada tipo de emoção. Observamos que as palavras consideradas positivas são maioria nos tweets dos brasileiros que mencionam os termos de busca utilizados. As emoções mais presentes são confiança e medo. Por último, observamos pequenas manifestações de alegria e surpresa com os tweets publicados quando se referem aos dois principais atores do combate ao coronavírus no Brasil.
 
-```{r sentiment-data, echo=FALSE}
-
+```{r sentiment-data, echo=FALSE, fig.align='center'}
+names(tw)
 # subsetting emotions columns
-emo <- tw[, c(92:101)]
+emo <- tw[, c(14:23)]
 
 emobar <- colSums(emo)
 
@@ -125,42 +134,79 @@ b1
 
 Podemos também verificar a incidência de palavras por sentimento. Vemos que palavras como "demissão" e "sair" são as palavras mais frequentes que estão relacionadas ao sentimento de surpresa. As palavras mais frequentes que mensuram raiva são "louco", "crise" e "política". "Trabalho", "ministério" e "remédio" são os termos mais frequentes que estão relacionados a alegria. 
 
-```{r freq, echo=FALSE, warning=FALSE}
+```{r freq, echo=FALSE, warning=FALSE, fig.align='center'}
 load('./data/tokens.RData')
 
-tok %>%
+cloud <- tok %>%
   filter(!sentiment %in% c('negative', 'positive')) %>%
   count(term, sentiment, sort = T) %>%
-  spread(sentiment, n, fill = 0L) %>%
+  bind_tf_idf(term, sentiment, n) %>%
+  spread(sentiment, tf_idf, fill = 0L) %>%
+  group_by(term) %>%
+  summarize_all(funs(sum)) %>%
   as.data.frame() %>% 
   column_to_rownames("term") %>%
-  comparison.cloud(title.size = 1.5, max.words = 320)
+  select(-c(idf, tf, n)) 
+
+names(cloud) <- c('raiva', 'antecipação', 'aversão', 'medo', 'alegria', 'tristeza', 'surpresa', 'confiança')
+
+comparison.cloud(cloud, title.size = 1.5, max.words = 320)
 
 ```
 
 
-Também dividimos os tweets de acordo com o assunto que abordam. A atribuição dos valores para esta variável ocorreu da seguinte forma: se um tweet mencionar a palavra "bolsonaro" ou "presidente", o assunto deste tweet será classificado como "Bolsonaro". Caso mencione as palavras "mandetta" ou a expressão "ministro da saúde", o assunto deste post será classificado como "Mandetta". Para todos os outros casos, o tweet recebeu a categoria "Both" para a variável assunto. Podemos observar que predominam tweets positivos em relação a Bolsonaro, bem como emoções de confiança. No entanto, devemos ter em mente que aproximadamente 55% das publicações pró-Bolsonaro no Twitter são realizadas por robôs^[Disponível em: https://valor.globo.com/politica/noticia/2020/04/03/55-de-publicacoes-pro-bolsonaro-sao-feitas-por-robos.ghtml]. No que se refere ao ministro da saúde, observamos uma maior frequência de palavras negativas. Quando comparamos os sentimentos de confiança e medo em relação a Bolsonaro e a Mandetta, podemos verificar que há mais menções de confiança relacionadas ao presidente do que ao ministro. O oposto ocorre em relação ao sentimento de medo: mais palavras que denotam medo estão relacionadas a Mandetta do que a Bolsonaro. 
+Os tweets foram divididos de acordo com o assunto que abordam. A atribuição dos valores para esta variável ocorreu da seguinte forma: se um tweet mencionar a palavra "bolsonaro" ou "presidente", o assunto deste tweet será classificado como "Bolsonaro". Caso mencione as palavras "mandetta" ou a expressão "ministro da saúde", o assunto deste post será classificado como "Mandetta". Para todos os outros casos, o tweet recebeu a categoria "Both" para a variável assunto. Podemos observar que predominam tweets positivos em relação a Bolsonaro, bem como emoções de confiança. No entanto, devemos ter em mente que aproximadamente 55% das publicações pró-Bolsonaro no Twitter são realizadas por robôs^[Disponível em: https://valor.globo.com/politica/noticia/2020/04/03/55-de-publicacoes-pro-bolsonaro-sao-feitas-por-robos.ghtml]. No que se refere ao ministro da saúde, observamos uma maior frequência de palavras negativas. Quando comparamos os sentimentos de confiança e medo em relação a Bolsonaro e a Mandetta, podemos verificar que há mais menções de confiança relacionadas ao presidente do que ao ex-ministro. O oposto ocorre em relação ao sentimento de medo: mais palavras que denotam medo estão relacionadas a Mandetta do que a Bolsonaro. 
 
-```{r sentiment-both, echo=FALSE, warning=FALSE, message=FALSE}
+```{r radar, echo=FALSE, warning=FALSE, fig.align='center'}
 # adding "subject" variable (which figure the text mentions)
 tw$subject <- ifelse(duplicated(tw$status_id), 'Both', tw$subject)
 
 # subsetting emotions columns
 emo$subject <- tw$subject
 
-# plot with colors for each subject group
-b2 <- emo %>%
+
+emo2 <- emo %>%
   na.omit() %>%
   group_by(subject) %>%
   summarize_all(funs(sum)) %>%
   gather(key = 'emotion', value = 'count', -subject) %>%
-  group_by(subject) %>%
-  mutate(freq = count / sum(count)) %>%
-  ggplot(aes(x = reorder(emotion, - freq) , y = freq, fill = subject)) +
-  geom_bar(stat = 'identity', position = 'dodge2') +
-  theme_minimal() +
-  labs(x = '', y = '')
-b2
+  spread(subject, count)
+
+rownames(emo2) <- emo2$emotion
+
+rownames(emo2) <- c('raiva', 'antecipação', 'aversão', 'medo', 'alegria', 'negativo', 'positivo', 'tristeza', 'surpresa', 'confiança')
+
+emo3 <- lapply(emo2[ , -1], function(x) x/sum(x, na.rm=TRUE)) %>% as.data.frame()
+
+emo2 <- cbind(emo2$emotion, emo3)
+
+emo2$`emo2$emotion` <- c('raiva', 'antecipação', 'aversão', 'medo', 'alegria', 'negativo', 'positivo', 'tristeza', 'surpresa', 'confiança')
+
+emo2 %>% 
+  chartJSRadar(polyAlpha = 0.1)
+
+```
+
+```{r sentiment-both, echo=FALSE, warning=FALSE, message=FALSE}
+# adding "subject" variable (which figure the text mentions)
+#tw$subject <- ifelse(duplicated(tw$status_id), 'Both', tw$subject)
+
+# subsetting emotions columns
+#emo$subject <- tw$subject
+
+# plot with colors for each subject group
+#b2 <- emo %>%
+#  na.omit() %>%
+#  group_by(subject) %>%
+#  summarize_all(funs(sum)) %>%
+#  gather(key = 'emotion', value = 'count', -subject) %>%
+#  group_by(subject) %>%
+#  mutate(freq = count / sum(count)) %>%
+#  ggplot(aes(x = reorder(emotion, - freq) , y = freq, fill = subject)) +
+#  geom_bar(stat = 'identity', position = 'dodge2') +
+#  theme_minimal() +
+#  labs(x = '', y = '')
+#b2
 
 ```
 Na figura abaixo vemos algumas tendências da frequência de palavras positivas e negativas associadas a cada personagem. Verificamos um pico de tweets positivos em relação ao ministro da saúde no dia 6 de abril, data do episódio em que circularam rumores da demissão de Mandetta pelo presidente Bolsonaro. Os horários presentes no eixo x do gráfico estão no horário de Greenwich, portanto, 3 horas a mais do que no horário de Brasília. Também é observado um pico de palavras negativas em relação ao ministro. Se compararmos ambos os gráficos, podemos verificar que se sobressaem as palavras negativas ao ministro em relação às palavras posivitas. Há também uma maior prevalência de palavras negativas dirigidas ao presidente Bolsonaro na data do episódio. 
@@ -176,7 +222,7 @@ l1 <- tok %>%
   geom_line() +
   theme_minimal() +
   labs(x = '', y = '') +
-  scale_x_datetime(breaks = date_breaks('8 hour')) +
+  scale_x_datetime(breaks = date_breaks('1 day')) +
   theme(axis.text.x = element_text(angle = 90), legend.position = 'bottom') +
   ggtitle('Frequência de palavras positivas') +
   scale_y_continuous(limits = c(0, .15), breaks = seq(0, .15, .025))
@@ -191,33 +237,36 @@ l2 <- tok %>%
   geom_line() +
   theme_minimal() +
   labs(x = '', y = '') +
-  scale_x_datetime(breaks = date_breaks('8 hour')) +
+  scale_x_datetime(breaks = date_breaks('1 day')) +
   theme(axis.text.x = element_text(angle = 90), legend.position = 'bottom') +
   ggtitle('Frequência de palavras negativas') +
   scale_y_continuous(limits = c(0, .15), breaks = seq(0, .15, .025))
 
-temp <- ggarrange(l1, l2, ncol = 2)
-temp
+#temp <- ggarrange(ggplotly(l1), ggplotly(l2), ncol = 2)
+
+ggplotly(l1) %>% layout(legend = list(orientation = "h", x = 0.35, y = -0.35), autosize = T)
+ggplotly(l2) %>% layout(legend = list(orientation = "h", x = 0.35, y = -0.35), autosize = T)
 ```
 
-O gráfico abaixo denota comparativamente a frequência de sentimentos e emoções atribuídos a cada uma das figuras. Observamos que há uma maior frequência de termos positivos associados ao presidente compatativamente com o ministro da saúde. No que se refere a palavras associadas a sentimentos negativos, observamos uma maior prevalência de tais palavras em tweets que mencionam o ministro da saúde do que em tweets que mencionam Bolsonaro. Cabe mais uma vez lembrar aqui a incidência do número de robôs associados a tweets em apoio ao presidente, como já mencionado nesta página.
 
-```{r radar, echo=FALSE, warning=FALSE}
-emo2 <- emo %>%
-  na.omit() %>%
-  group_by(subject) %>%
-  summarize_all(funs(sum)) %>%
-  gather(key = 'emotion', value = 'count', -subject) %>%
-  spread(subject, count)
+```{r radar2, echo=FALSE, warning=FALSE}
+#O gráfico abaixo denota comparativamente a frequência de sentimentos e emoções atribuídos a cada uma das figuras. #Observamos que há uma maior frequência de termos positivos associados ao presidente compatativamente com o ministro #da saúde. No que se refere a palavras associadas a sentimentos negativos, observamos uma maior prevalência de tais #palavras em tweets que mencionam o ministro da saúde do que em tweets que mencionam Bolsonaro. Cabe mais uma vez #lembrar aqui a incidência do número de robôs associados a tweets em apoio ao presidente, como já mencionado nesta #página.
 
-rownames(emo2) <- emo2$emotion
+#emo2 <- emo %>%
+#  na.omit() %>%
+#  group_by(subject) %>%
+#  summarize_all(funs(sum)) %>%
+#  gather(key = 'emotion', value = 'count', -subject) %>%
+#  spread(subject, count)
 
-emo3 <- lapply(emo2[ , -1], function(x) x/sum(x, na.rm=TRUE)) %>% as.data.frame()
+#rownames(emo2) <- emo2$emotion
 
-emo2 <- cbind(emo2$emotion, emo3)
+#emo3 <- lapply(emo2[ , -1], function(x) x/sum(x, na.rm=TRUE)) %>% as.data.frame()
+
+#emo2 <- cbind(emo2$emotion, emo3)
 
 
-emo2 %>% 
-  chartJSRadar(polyAlpha = 0.1)
+#emo2 %>% 
+#  chartJSRadar(polyAlpha = 0.1)
 
 ```
