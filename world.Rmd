@@ -15,6 +15,8 @@ date: "`r format(Sys.time(), '%d %B, %Y')`"
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+# this file contains code from Edward Parker https://shiny.rstudio.com/gallery/covid19-tracker.html
 ```
 
 ```{r packages, include=FALSE}
@@ -36,7 +38,6 @@ if(!require(shinydashboard)) install.packages("shinydashboard", repos = "http://
 if(!require(shinythemes)) install.packages("shinythemes", repos = "http://cran.us.r-project.org")
 
 ```
-
 
 ```{r definindo objetos, include=FALSE}
 # update data with automated script
