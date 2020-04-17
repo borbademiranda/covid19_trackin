@@ -160,3 +160,5 @@ collated_data$last_update[nrow(collated_data)] = paste(format(as.POSIXlt(Sys.tim
 
 # save file
 write.csv(collated_data, "data/coronavirus.csv", row.names=F)
+
+rm(list = ls())

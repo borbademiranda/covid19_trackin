@@ -12,6 +12,11 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(shiny)
 library(plotly)
+library(forecast)
+library(tseries)
+library(xts)
+library(plyr)
+library(zoo)
 ```
 
 
@@ -28,53 +33,127 @@ states <- brazil %>%
   select(-starts_with('city'))
 ```
 
-```{r ts-states, echo=FALSE}
-inputPanel(
+```{r forecast-states, include=FALSE}
 
-  selectInput('breaks2', label = 'Estados:',
-  choices = distinct(states, state)),
+# transforming dataset to large format
+st_sprd <- states %>%
+  select(date, state, confirmed) %>%
+  spread(state, confirmed)
+
+# substituting NA for zero
+lastValue <- function(x)   tail(x[!is.na(x)], 1)
+
+lastrow <- apply(st_sprd, 2, lastValue)
+
+st_sprd[nrow(st_sprd),] <- lastrow
+
+st_sprd[is.na(st_sprd)] <- 0
+
+# transforming data frame to ts format
+st_ts <- ts(st_sprd[, -1])
+
+# creating list to store results from each arima model
+arimalist <- list()
+
+# loop for arima models in each data frame variable
+for(i in 1:ncol(st_ts)) {
+  arimalist[[i]] <- auto.arima(st_ts[, i])
+}
+
+# changing list names
+names(arimalist) <- names(st_sprd[, -1])
+
+# data frame to store forecast results
+forecast_list <- list()
+
+# loop to forecast each element of arima list
+for (i in 1:length(arimalist)) {
+  forecast_list[[i]] <- forecast(arimalist[[i]], h = 15)
+}
+
+# changing names
+names(forecast_list) <- names(st_sprd[, -1])
+
+# transforming list to data.frame
+forecast_df <- ldply(forecast_list, data.frame)
+
+# saving models specifications
+model_arima <- data.frame(matrix(nrow = length(forecast_list), ncol = 1))
+
+names(model_arima) <- c('model')
+
+model_arima$state <- names(forecast_list)
+
+for (i in 1:length(forecast_list)) {
+  model_arima[i, 1] <- forecast_list[[i]][['method']]
+} 
+
+# binding to data frame 
+forecast_df <- merge(forecast_df, model_arima, by.x = '.id', by.y = 'state')
+
+# adding date variable
+seq.Date(from = Sys.Date(), length.out = 15, by = 'day') %>% rep() -> forecast_df$date
+
+# adding type variable
+forecast_df$Valores <- 'Previstos'
+
+head(forecast_df)
+
+# adding type variable on the observed dataframe
+states$Valores <- 'Confirmados'
+
+# renaming forecast variable
+plot_df <- forecast_df %>% 
+  select(.id, Point.Forecast, Lo.80, Hi.80, Lo.95, Hi.95, date, Valores, model) %>%
+  dplyr::transmute('confirmed' = Point.Forecast,
+                   'state' = .id,
+                   'Valores' = Valores,
+                   'date' = date, 
+                   'low.80' = Lo.80,
+                   'low.95' = Lo.95,
+                   'hi.80' = Hi.80,
+                   'hi.95' = Hi.95,
+                   'model' = model) %>%
+  bind_rows(states %>% select(confirmed, state, Valores, date))
+
+```
+
+```{r forecast-plot, echo=FALSE}
+
+  selectInput('breaks3', label = 'Estados:',
+  choices = distinct(plot_df, state))
   
   #checkboxGroupInput('breaks2', label = 'Estados:', 
    #                  choices = unique(states$state), 
     #                 selected = unique(states$state)[1]),
   
-  checkboxInput('log_date', label = 'Escala logarítmica', FALSE)
   
-)
-
 renderPlotly({
- 
    
-    l1 <- ggplot(states %>% filter(state == input$breaks2), 
-       aes(x = date, y = confirmed)) +
-  geom_line() +
-  labs(title = paste("Total de casos", input$breaks2),
-       x = "", 
-       y = "Confirmados")+
-  #guides(color=guide_legend(title="Países"))+
-  theme_minimal()+
-  theme(plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
-        plot.subtitle = element_text(face = "italic", size = 12, hjust = 0.5)) +
-      scale_x_date(date_breaks = '1 week')
+    l2 <- ggplot(plot_df %>% filter(state == input$breaks3), 
+                 aes(x = date, y = confirmed, color = Valores)) +
+          geom_line() +
+          geom_point() +
+          geom_ribbon(aes(ymin = low.95, ymax = hi.95), colour = 'grey70', alpha = .3) +
+          labs(title = paste("Casos confirmados e previstos", input$breaks3),
+               x = "", 
+               y = "") +
+          theme_minimal()+
+          theme(plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
+                plot.subtitle = element_text(face = "italic", size = 12, hjust = 0.5),
+                legend.position = "bottom", axis.text.x = element_text(angle = 60)) +
+          scale_x_date(date_breaks = '1 week')
   
-  if (input$log_date)
-    
-     
-   
-    l1 <- ggplot(states %>% filter(state == input$breaks2), 
-       aes(x = date, y = log(confirmed))) +
-  geom_line() +
-  labs(title = paste("Total de casos", input$breaks2),
-       x = "", 
-       y = "Confirmados (log)")+
-  #guides(color=guide_legend(title="Países"))+
-  theme_minimal()+
-  theme(plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
-        plot.subtitle = element_text(face = "italic", size = 12, hjust = 0.5)) +
-      scale_x_date(date_breaks = '1 week')
-  
-  return(l1)
-
+    ggplotly(l2) %>%  
+     layout(legend = list(orientation = "h", x = 0.35, y = -0.35),
+            autosize = T, height = 600,
+            annotations = list(x = 1, y = -.3, 
+                              text = paste('Modelo utilizado:', plot_df$model[plot_df$state == input$breaks3][1]),
+                              showarrow = F,
+                              xref = 'paper', yref = 'paper', xanchor = 'right', 
+                              yanchor = 'auto', xshift = 0, yshift = 0, 
+                              font = list(size = 12, color = "black")))
+          
 })
 ```
 

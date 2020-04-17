@@ -1,6 +1,6 @@
 ---
 title: "Análise de sentimentos do Twitter"
-author: "Lucas Borba-Miranda"
+author: "Lucas B Miranda"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 ---
 

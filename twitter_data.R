@@ -118,6 +118,8 @@ save(tw, file = './data/twitter2.RData')
 ##################### LOADING DATA ##################
 load('./data/twitter2.RData')
 
+load('tw_1604.RDAta')
+
 names(tw)
 
 # subsetting columns
@@ -129,6 +131,14 @@ columns <- c('status_id', 'user_id', 'created_at', 'text', 'hashtags', 'symbols'
 tw <- tw[columns]
 
 gc()
+
+# adding subject variable
+newm$subject <- 'Mandetta'
+newb$subject <- 'Bolsonaro'
+
+# binding datasets
+new <- bind_rows(newb, newm)
+
 
 # search new tweets
 new <- search_tweets('bolsonaro OR presidente', 
@@ -145,33 +155,49 @@ new <- search_tweets('bolsonaro OR presidente',
 save(new, './data/new_tw.RData')
 system('shutdown -s')
 
+rm(newb, newm)
+
+gc()
+
+summary(new2$created_at)
+
 # getting sentiments
-new <- cbind(new[columns], get_nrc_sentiment(new$text, language = 'portuguese'))
+new <- cbind(new, get_nrc_sentiment(new$text, language = 'portuguese'))
+
+new2 <- new[columns]
   
 # binding with data.frame
-tw <- rbind(tw, new)
+tw <- rbind(tw, new2)
 
-tw <- tw[, -c(92:101)]
+save(tw, file = './data/twitter_1604.RData')
+
+tw <- tw %>% distinct(status_id, subject, .keep_all = T)
 
 # tokenizing tweets
-rm(tw_n)
 
 # restarting session
 .rs.restartR()
 
-load('./data/tokens.RData')
+load('./data/twitter_1604.RData')
 
-summary(tok$created_at)
+load('./data/tokens.RData')
 
 # tokenizing text
 tok <- tw %>%
-  filter(created_at < mean(tw$created_at)) %>%
+  filter(created_at < quantile(tw$created_at, .25)) %>%
   unnest_tokens(term, text) %>%
   select(status_id, term, subject, created_at) %>%
   merge(get_sentiment_dictionary('nrc', language = 'portuguese'), 
         by.x = 'term', by.y = 'word')
 
-quantile(tw$created_at, .75)
+tok <- tok %>% 
+  rbind(tw %>%
+          filter(created_at >= quantile(tw$created_at, .25) & 
+                   created_at < mean(tw$created_at)) %>%
+          unnest_tokens(term, text) %>%
+          select(status_id, term, subject, created_at) %>%
+          merge(get_sentiment_dictionary('nrc', language = 'portuguese'), 
+                by.x = 'term', by.y = 'word'))
 
 tok <- tok %>% 
   rbind(tw %>%
@@ -190,11 +216,10 @@ tok <- tok %>%
           merge(get_sentiment_dictionary('nrc', language = 'portuguese'), 
                 by.x = 'term', by.y = 'word'))
 
-# binding with last token object
-tok <- rbind(tok, tok2)
-
 # saving token object
 save(tok, file = './data/tokens.RData')
+
+system('shutdown -s')
 
 # removing objects
 rm(list = ls())

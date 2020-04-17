@@ -1,5 +1,4 @@
 ---
-title: 'Covid-19 no Brasil'
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 ---
 
@@ -31,10 +30,6 @@ library(data.table)
 
 ```{r covidbr, include=FALSE}
 # arquivo temporário para baixar dados
-temp <- tempfile()
-
-# braixando dados
-download.file("https://data.brasil.io/dataset/covid19/caso.csv.gz", temp)
 
 brazil <- as.data.frame(data.table::fread('https://www.brasil.io/dataset/covid19/caso?format=csv'))
 
@@ -101,7 +96,7 @@ br_last <- cv_cases$cases[cv_cases$country == 'Brazil']
 
 ```
 
-O total de casos registrados no Brasil até o dia `r format(Sys.Date(), '%d/%m/%Y')` é de `r tail(br_last, 1)`. Podemos observar no mapa abaixo algumas estatísticas sobre a Covid-19 nos municípios brasileiros. Os dados são atualizados diariamente, dependendo das secretarias estaduais de saúde, tendo em vista que os dados são produzidos a nível municipal. 
+O total de casos registrados no Brasil até o dia `r format(Sys.Date(), '%d/%m/%Y')` às `r str_sub(Sys.time(), -8)` é de `r tail(br_last, 1)`. Podemos observar no mapa abaixo algumas estatísticas sobre a Covid-19 nos municípios brasileiros. Os dados são atualizados diariamente, dependendo das secretarias estaduais de saúde, tendo em vista que os dados são produzidos a nível municipal. Os dados são provenientes do site [Brasil.io](https://www.brasil.io/home) e da [Johns Hopkins University](http://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv). 
 
 ```{r map, echo=FALSE, fig.align='center', warning=FALSE}
 
@@ -154,18 +149,20 @@ Na tabela abaixo vemos a distribuição de algumas variáveis por UF no Brasil. 
 ```{r table, echo=FALSE}
 states[order(states$state),] %>%
   filter(place_type == 'state' & is_last == T) %>%
-  select(state, confirmed, deaths, death_rate) %>%
+  select(state, date, confirmed, deaths, death_rate) %>%
   #group_by(state) %>%
   #summarize('Estado' = sum(deaths, na.rm = T),
    #         'Confirmados', sum(confirmed, na.rm = T),
     #        'Taxa de mortalidade' = sum(death_rate, na.rm = T)) %>%
   dplyr::transmute('Estado' = state,
+                   'Última atualização' = format(date, '%d/%m/%Y'),
                    'Casos confirmados' = confirmed,
                    'Mortes' = deaths,
                    'Taxa de mortalidade' = death_rate) %>%
   kable() %>%
   kable_styling() %>%
   footnote(general = paste('Dados atualizados em:', format(Sys.Date(), '%d/%m/%Y'), 'às', str_sub(Sys.time(), -9)))
+
 ```
 
 Se analisarmos os estados com maior taxa de mortalidade (Mortos/Infectados), verificamos que Paraíba, Piauí e Pernambuco são os estados com as maiores taxas de mortalidade no Brasil.
