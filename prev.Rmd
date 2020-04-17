@@ -1,70 +1,22 @@
 ---
-date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: html_document
 ---
+
+<style>
+.html-widget {
+    margin: auto;
+}
+</style>
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Podemos ver nos gráficos abaixo o acumulado de casos por estado e a previsão de casos confirmados para os próximos 15 dias. A área sombreada represente os intervalos de confiança a 95%.
+Podemos ver nos gráficos abaixo o acumulado de casos por estado e a previsão de casos confirmados para os próximos 15 dias. Os modelos utilizados para estimar o número de casos confirmados foram Modelos Auto-regressivos Integrados de Médias Móveis (Arima), com os parâmetros (número de termos autoregressivos, número de diferenças e número de termos de média móvel) especificados na legenda dos gráficos de cada estado. A área sombreada representa os intervalos de confiança a 95%.
+
+<iframe src ="https://lucasbmiranda.shinyapps.io/ts_brstates/" height=600px width=820px />
 
 ```{r plots, echo=FALSE, fig.align='center'}
-knitr::include_app('https://lucasbmiranda.shinyapps.io/ts_brstates/', height = '700px')
 
-#for (i in seq_along(states$state)) {
-#  plot <- ggplot(subset(states, states$state == states_list[i]),
-#                 aes(date, confirmed, group = state)) +
-#    geom_line()
-#  print(plot)
-#}
-
-
-#inputPanel(
-#
-#  selectInput('breaks2', label = 'Estados:',
-#  choices = distinct(states, state)),
-#  
-#  #checkboxGroupInput('breaks2', label = 'Estados:', 
-#   #                  choices = unique(states$state), 
-#    #                 selected = unique(states$state)[1]),
-#  
-#  checkboxInput('log_date', label = 'Escala logarítmica', FALSE)
-  
-#)
-
-#renderPlotly({
- 
-   
-#    l1 <- ggplot(states %>% filter(state == input$breaks2), 
-#       aes(x = date, y = confirmed)) +
-#  geom_line() +
-#  labs(title = paste("Total de casos", input$breaks2),
-#       x = "", 
-#       y = "Confirmados")+
-  #guides(color=guide_legend(title="Países"))+
-#  theme_minimal()+
-#  theme(plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
-#        plot.subtitle = element_text(face = "italic", size = 12, hjust = 0.5)) +
-#      scale_x_date(date_breaks = '1 week')
-  
-#  if (input$log_date)
-    
-     
-   
-#    l1 <- ggplot(states %>% filter(state == input$breaks2), 
-#       aes(x = date, y = log(confirmed))) +
-#  geom_line() +
-#  labs(title = paste("Total de casos", input$breaks2),
-#       x = "", 
-#       y = "Confirmados (log)")+
-  #guides(color=guide_legend(title="Países"))+
-#  theme_minimal()+
-#  theme(plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
-#        plot.subtitle = element_text(face = "italic", size = 12, hjust = 0.5)) +
-#      scale_x_date(date_breaks = '1 week')
-  
-#  return(l1)
-
-#})
+#knitr::include_app('https://lucasbmiranda.shinyapps.io/ts_brstates/', height = '700px')
 ```

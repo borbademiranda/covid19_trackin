@@ -302,9 +302,13 @@ $(document).ready(function () {
 </div>
 
 
-<p>Podemos ver nos gráficos abaixo o acumulado de casos por estado e a previsão de casos confirmados para os próximos 15 dias. A área sombreada represente os intervalos de confiança a 95%.</p>
-<iframe src="https://lucasbmiranda.shinyapps.io/ts_brstates/?showcase=0" width="672" height="700px">
-</iframe>
+<style>
+.html-widget {
+    margin: auto;
+}
+</style>
+<p>Podemos ver nos gráficos abaixo o acumulado de casos por estado e a previsão de casos confirmados para os próximos 15 dias. Os modelos utilizados para estimar o número de casos confirmados foram Modelos Auto-regressivos Integrados de Médias Móveis (Arima), com os parâmetros (número de termos autoregressivos, número de diferenças e número de termos de média móvel) especificados na legenda dos gráficos de cada estado. A área sombreada representa os intervalos de confiança a 95%.</p>
+<iframe src ="https://lucasbmiranda.shinyapps.io/ts_brstates/" height=600px width=820px />
 
 
 
