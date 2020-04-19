@@ -166,7 +166,7 @@ states[order(states$state),] %>%
 
 ```
 
-Se analisarmos os estados com maior taxa de mortalidade (Mortos/Infectados), verificamos que Paraíba, Piauí e Pernambuco são os estados com as maiores taxas de mortalidade no Brasil.
+Se analisarmos os estados com maior taxa de mortalidade (Mortos/Infectados), verificamos que Paraíba, Pernambuco e Rio de Janeiro são os estados com as maiores taxas de mortalidade no Brasil.
 
 ```{r tab-2, echo=FALSE}
 states[order(desc(states$death_rate)),] %>% filter(place_type == 'state' & is_last == T) %>% dplyr::select(state, death_rate) %>% head(3) %>%
