@@ -56,7 +56,7 @@ date <- Sys.Date()
 
 ```{r geodata, include=FALSE, warning=FALSE}
 # coordenadas dos municípios brasileiros
-mun <- read.csv('C:/Users/borba/OneDrive/Área de Trabalho/2020/covid_tracking/data/mun_coord.csv', encoding = 'UTF-8')
+mun <- read.csv('./data/mun_coord.csv', encoding = 'UTF-8')
 
 mun$city <- mun$NOME_MUNICIPIO
 

@@ -108,7 +108,7 @@ set.seed(100); textplot_network(tag_fcm, min_freq = .3, edge_alpha = .3, edge_si
 Já o gráfico de barras abaixo ilustra a proporção de palavras contidas nos tweets de acordo com cada tipo de emoção. Observamos que as palavras consideradas positivas são maioria nos tweets dos brasileiros que mencionam os termos de busca utilizados. As emoções mais presentes são confiança e medo. Por último, observamos pequenas manifestações de alegria e surpresa com os tweets publicados quando se referem aos dois principais atores do combate ao coronavírus no Brasil.
 
 ```{r sentiment-data, echo=FALSE, fig.align='center'}
-names(tw)
+
 # subsetting emotions columns
 emo <- tw[, c(14:23)]
 
@@ -211,7 +211,7 @@ emo2 %>%
 ```
 Na figura abaixo vemos algumas tendências da frequência de palavras positivas e negativas associadas a cada personagem. Verificamos um pico de tweets positivos em relação ao ministro da saúde no dia 6 de abril, data do episódio em que circularam rumores da demissão de Mandetta pelo presidente Bolsonaro. Os horários presentes no eixo x do gráfico estão no horário de Greenwich, portanto, 3 horas a mais do que no horário de Brasília. Também é observado um pico de palavras negativas em relação ao ministro. Se compararmos ambos os gráficos, podemos verificar que se sobressaem as palavras negativas ao ministro em relação às palavras posivitas. Há também uma maior prevalência de palavras negativas dirigidas ao presidente Bolsonaro na data do episódio. 
 
-```{r line-sent, echo=FALSE, fig.width=10}
+```{r line-sent, echo=FALSE}
 # positive sentiment
 l1 <- tok %>%
   filter(sentiment == 'positive') %>%
@@ -222,7 +222,7 @@ l1 <- tok %>%
   geom_line() +
   theme_minimal() +
   labs(x = '', y = '') +
-  scale_x_datetime(breaks = date_breaks('1 day')) +
+  scale_x_datetime(breaks = date_breaks('5 day')) +
   theme(axis.text.x = element_text(angle = 90), legend.position = 'bottom') +
   ggtitle('Frequência de palavras positivas') +
   scale_y_continuous(limits = c(0, .15), breaks = seq(0, .15, .025))
@@ -237,7 +237,7 @@ l2 <- tok %>%
   geom_line() +
   theme_minimal() +
   labs(x = '', y = '') +
-  scale_x_datetime(breaks = date_breaks('1 day')) +
+  scale_x_datetime(breaks = date_breaks('5 day')) +
   theme(axis.text.x = element_text(angle = 90), legend.position = 'bottom') +
   ggtitle('Frequência de palavras negativas') +
   scale_y_continuous(limits = c(0, .15), breaks = seq(0, .15, .025))
