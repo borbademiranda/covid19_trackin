@@ -1,6 +1,5 @@
 ---
 title: 'Covid-19 no Brasil'
-date: "`r format(Sys.time(), '%d %B, %Y')`"
 ---
 
 <style>
@@ -145,7 +144,7 @@ states <- brazil %>%
 ```
 
 
-Na tabela abaixo vemos a distribuição de algumas variáveis por UF no Brasil. Verificamos que São Paulo é o estado com maior número de infectados (`r states %>% filter(place_type == 'state' & is_last == T & state == 'SP') %>% select(confirmed) %>% sum()`), seguido pelo Rio de Janeiro (`r states %>% filter(place_type == 'state' & is_last == T & state == 'RJ') %>% select(confirmed) %>% sum()`) e Ceará (`r states %>% filter(place_type == 'state' & is_last == T & state == 'CE') %>% select(confirmed) %>% sum()`). Já no que se refere ao número de mortes, os primeiros colocados são São Paulo, Rio de Janeiro e Recife, com `r print(states$confirmed[states$state == 'SP' & states$is_last == T])`, `r print(states$confirmed[states$state == 'RJ' & states$is_last == T])` e `r print(states$confirmed[states$state == 'SP' & states$is_last == T])`. 
+Na tabela abaixo vemos a distribuição de algumas variáveis por UF no Brasil. Verificamos que São Paulo é o estado com maior número de infectados (`r states %>% filter(place_type == 'state' & is_last == T & state == 'SP') %>% select(confirmed) %>% sum()`), seguido pelo Rio de Janeiro (`r states %>% filter(place_type == 'state' & is_last == T & state == 'RJ') %>% select(confirmed) %>% sum()`) e Ceará (`r states %>% filter(place_type == 'state' & is_last == T & state == 'CE') %>% select(confirmed) %>% sum()`). 
 
 ```{r table, echo=FALSE}
 states[order(states$state),] %>%
@@ -166,7 +165,7 @@ states[order(states$state),] %>%
 
 ```
 
-Se analisarmos os estados com maior taxa de mortalidade (Mortos/Infectados), verificamos que Rio de Janeiro, Pernambuco e São Paulo são os estados com as maiores taxas de mortalidade no Brasil.
+Se analisarmos os estados com maior taxa de mortalidade (Mortos/Infectados), verificamos que Rio de Janeiro, Amazonas e São Paulo são os estados com as maiores taxas de mortalidade no Brasil.
 
 ```{r tab-2, echo=FALSE}
 states[order(desc(states$death_rate)),] %>% filter(place_type == 'state' & is_last == T) %>% dplyr::select(state, death_rate) %>% head(3) %>%
