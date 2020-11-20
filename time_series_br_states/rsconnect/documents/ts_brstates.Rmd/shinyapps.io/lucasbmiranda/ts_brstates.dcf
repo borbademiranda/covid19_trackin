@@ -1,10 +1,12 @@
 name: ts_brstates
-title:
+title: ts_brstates
 username:
 account: lucasbmiranda
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 2119253
-bundleId: 3026905
+bundleId: 3886208
 url: https://lucasbmiranda.shinyapps.io/ts_brstates/
-when: 1587128824.3348
+when: 1605902611.97679
+asMultiple: FALSE
+asStatic: FALSE
