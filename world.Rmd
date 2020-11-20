@@ -195,7 +195,7 @@ carai <- paste(pais, '<br/>',
 
 
 ```{r mapa mundo, echo=FALSE, warning=FALSE, layout="l-screen-inset"}
-mybins <- c(0, 1, 10, 50, 100, 500, 1000)
+mybins <- c(0, 50, 100, 250, 500, 1000, 2500, 5000)
 
 palette2 <- colorBin(palette="Reds", cv_cases$per100k, mybins, pretty = F)
 
