@@ -17,11 +17,12 @@ library(tseries)
 library(xts)
 library(plyr)
 library(zoo)
+library(R.utils)
 ```
 
 
 ```{r data, include=FALSE}
-brazil <- as.data.frame(data.table::fread('https://www.brasil.io/dataset/covid19/caso?format=csv'))
+brazil <- as.data.frame(data.table::fread('https://data.brasil.io/dataset/covid19/caso.csv.gz'))
 
 # adjusting variables
 brazil$is_last <- as.logical(brazil$is_last)
@@ -41,19 +42,21 @@ st_sprd <- states %>%
   spread(state, confirmed)
 
 # substituting NA for zero
-lastValue <- function(x)   tail(x[!is.na(x)], 1)
+#lastValue <- function(x)   tail(x[!is.na(x)], 1)
 
-lastrow <- apply(st_sprd, 2, lastValue)
+#lastrow <- apply(st_sprd, 2, lastValue)
 
-st_sprd[nrow(st_sprd),] <- lastrow
+#st_sprd[nrow(st_sprd),] <- lastrow
 
-st_sprd[is.na(st_sprd)] <- 0
+#st_sprd[is.na(st_sprd)] <- 0
 
 # transforming data frame to ts format
-st_ts <- ts(st_sprd[, -1])
+st_ts <- stats::ts(st_sprd[, -1])
+
 
 # creating list to store results from each arima model
 arimalist <- list()
+
 
 # loop for arima models in each data frame variable
 for(i in 1:ncol(st_ts)) {
@@ -65,6 +68,7 @@ names(arimalist) <- names(st_sprd[, -1])
 
 # data frame to store forecast results
 forecast_list <- list()
+
 
 # loop to forecast each element of arima list
 for (i in 1:length(arimalist)) {
@@ -133,16 +137,16 @@ renderPlotly({
     l2 <- ggplot(plot_df %>% filter(state == input$breaks3), 
                  aes(x = date, y = confirmed, color = Valores)) +
           geom_line() +
-          geom_point() +
+          #geom_point() +
           geom_ribbon(aes(ymin = low.95, ymax = hi.95), colour = 'grey70', alpha = .3) +
           labs(title = paste("Casos confirmados e previstos", input$breaks3),
                x = "", 
                y = "") +
-          theme_minimal()+
+          theme_minimal() +
           theme(plot.title = element_text(face = "bold", size = 12, hjust = 0.5),
                 plot.subtitle = element_text(face = "italic", size = 12, hjust = 0.5),
                 legend.position = "bottom", axis.text.x = element_text(angle = 60)) +
-          scale_x_date(date_breaks = '1 week')
+          scale_x_date(date_breaks = '4 week')
   
     ggplotly(l2) %>%  
      layout(legend = list(orientation = "h", x = 0.35, y = -0.35),

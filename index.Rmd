@@ -25,13 +25,15 @@ library(plotly)
 library(lubridate)
 library(kableExtra)
 library(data.table)
+library(R.utils)
+
 ```
 
 
 ```{r covidbr, include=FALSE}
 # arquivo temporário para baixar dados
 
-brazil <- as.data.frame(data.table::fread('https://www.brasil.io/dataset/covid19/caso?format=csv'))
+brazil <- as.data.frame(data.table::fread('https://data.brasil.io/dataset/covid19/caso.csv.gz'))
 
 cv_cases = read.csv("data/coronavirus.csv")
 
@@ -82,7 +84,8 @@ carai <- paste(cidade, '<br/>',
   lapply(HTML)
 summary(bd$confirmed_per_100k_inhabitants)
 
-mybins <- c(seq(0, 30, 6), seq(50, 1000, 250))
+mybins <- c(seq(0, 2500, 500), seq(5000, 25000, 5000))
+#mybins <- seq(0, 25000, 2500)
 
 # criando paleta de cores
 palette <- colorNumeric(palette="Reds", domain = NULL, na.color="transparent")
@@ -116,7 +119,7 @@ m <- bd %>%
      #                                        padding = "3px 8px"), 
       #                          textsize = "13px", direction = "auto")) 
   addCircleMarkers(lng = ~LONGITUDE, lat = ~LATITUDE,
-                   radius = ~sqrt(bd$confirmed_per_100k_inhabitants), stroke = FALSE, fillOpacity = 0.5,
+                   radius = ~pracma::nthroot(bd$confirmed_per_100k_inhabitants, n = 5), stroke = FALSE, fillOpacity = 0.5,
                    label = carai, color = ~palette2(bd$confirmed_per_100k_inhabitants),
                    labelOptions = labelOptions(style = list("font-weight" = "normal", 
                                                             padding = "3px 8px"), 

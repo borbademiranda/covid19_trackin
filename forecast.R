@@ -1,4 +1,4 @@
-  library(tidyverse)
+library(tidyverse)
 library(forecast)
 library(tseries)
 library(xts)
@@ -49,7 +49,7 @@ bd_ar <- data.frame(cases = a2$x,
                     Valor = 'Observado',
                     lower = NA,
                     upper = NA) %>%
-  bind_rows(data.frame(cases = fc$mean, 
+  bind_rows(data.frame(cases = as.integer(fc$mean), 
                    data = seq.Date(from = Sys.Date() + 1, length.out = 7, by = 'day'), 
                    Valor = 'Predito',
                    lower = fc$lower,
@@ -60,7 +60,7 @@ bd_ar_deaths <- data.frame(cases = a2_deaths$x,
                            Valor = 'Observado',
                            lower = NA,
                            upper = NA) %>%
-  bind_rows(data.frame(cases = fc_deaths$mean, 
+  bind_rows(data.frame(cases = as.integer(fc_deaths$mean), 
                        data = seq.Date(from = Sys.Date() + 1, length.out = 7, by = 'day'), 
                        Valor = 'Predito',
                        lower = fc_deaths$lower,
@@ -118,7 +118,7 @@ bd_ar_br_deaths <- data.frame(cases = a3_deaths$x,
                        Valor = 'Observado',
                        lower = NA,
                        upper = NA) %>%
-  bind_rows(data.frame(cases = fc2_deaths$mean, 
+  bind_rows(data.frame(cases = as.integer(fc2_deaths$mean), 
                        data =  seq.Date(from = Sys.Date() + 1, length.out = 7, by = 'day'), 
                        Valor = 'Predito',
                        lower = fc2_deaths$lower,
